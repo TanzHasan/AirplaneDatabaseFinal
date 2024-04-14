@@ -37,24 +37,54 @@ def login_user():
                     return redirect("/")
                 else:
                     error = "Invalid email or password"
-                    return render_template("login.html", error=error)
+                    return render_template("login_user.html", error=error)
         except Exception as E:
-            return render_template("login.html", error=E)
+            return render_template("login_user.html", error=E)
 
         finally:
             connection.close()
 
-    return render_template("login.html")
+    return render_template("login_user.html")
+
+
+@app.route("/login_staff", methods=["GET", "POST"])
+def login_staff():
+    if "username" in session or "email" in session:
+        return home()
+    if request.method == "POST":
+        username = request.form["username"]
+        airline_name = request.form["airline_name"]
+        password = request.form["password"]
+        connection = pymysql.connect(**mysql_config)
+        try:
+            with connection.cursor() as cursor:
+                query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = %s"
+                cursor.execute(query, (username, airline_name, password))
+                user = cursor.fetchone()
+
+                if user:
+                    session["username"] = user["username"]
+                    return redirect("/")
+                else:
+                    error = "Invalid email or password"
+                    return render_template("login_staff.html", error=error)
+        except Exception as E:
+            return render_template("login_staff.html", error=E)
+
+        finally:
+            connection.close()
+
+    return render_template("login_staff.html")
 
 
 @app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
-    return redirect("/home")
+    return redirect("/")
 
 @app.route("/")
 def home():
-    if "username" in session or "email" in session:
+    if "email" in session:
         email = session["email"]
 
         connection = pymysql.connect(**mysql_config)
@@ -114,7 +144,12 @@ def home():
 
         finally:
             connection.close()
-
+    elif 'username' in session:
+        return render_template(
+                    "home.html",
+                    first_name='testing',
+                    last_name='testing',
+                )
     else:
         return redirect("/login_user")
 
