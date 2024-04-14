@@ -18,6 +18,52 @@ mysql_config = {
 }
 
 
+@app.route('/register_user', methods=['GET', 'POST'])
+def register_user():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        building_number = request.form['building_number']
+        street = request.form['street']
+        city = request.form['city']
+        state = request.form['state']
+        zipcode = request.form['zipcode']
+        passport_number = request.form['passport_number']
+        passport_expiration = request.form['passport_expiration']
+        passport_country = request.form['passport_country']
+        dob = request.form['dob']
+        
+        connection = pymysql.connect(**mysql_config)
+        
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    INSERT INTO Customers
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (email, password, first_name, last_name, building_number, street, city, state, zipcode, passport_number, passport_expiration, passport_country, dob))
+                connection.commit() # I need to do this to save
+
+                # just logging in again
+                query = "SELECT * FROM Customers WHERE Email = %s AND password = %s"
+                cursor.execute(query, (email, password))
+                user = cursor.fetchone()
+
+                if user:
+                    session["email"] = user["email"]
+                    return redirect("/")
+                else:
+                    error = "Invalid email or password"
+                    return render_template("login_user.html", error=error)
+        except Exception as E:
+            return render_template("login_user.html", error=E)
+        finally:
+            connection.close()
+    
+    return render_template('register_user.html')
+
 @app.route("/login_user", methods=["GET", "POST"])
 def login_user():
     if "username" in session or "email" in session:
@@ -77,7 +123,7 @@ def login_staff():
     return render_template("login_staff.html")
 
 
-@app.route("/logout", methods=["POST"])
+@app.route("/logout", methods=["POST", "GET"])
 def logout():
     session.clear()
     return redirect("/")
@@ -133,7 +179,6 @@ def home():
                 """
                 cursor.execute(query_ratings, (email,))
                 ratings = cursor.fetchall()
-
                 return render_template(
                     "home.html",
                     flights=flights,
