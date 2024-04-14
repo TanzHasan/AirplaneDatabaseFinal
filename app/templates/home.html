@@ -4,7 +4,83 @@
     <title>Home</title>
 </head>
 <body>
-    <h1>Will Fill in later</h1>
-    <p>spooky databases</p>
+    <h1>{{ first_name }} {{ last_name }}</h1>
+    
+    <h2>Your Flights</h2>
+    {% if flights %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Airline</th>
+                    <th>Flight Number</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Status</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                    <tr>
+                        <td>{{ flight.Airline_Name }}</td>
+                        <td>{{ flight.number }}</td>
+                        <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
+                        <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
+                        <td>{{ flight.status }}</td>
+                        <td>
+                            <form action="/rate_flight" method="POST">
+                                <input type="hidden" name="airline_name" value="{{ flight.Airline_Name }}">
+                                <input type="hidden" name="identification" value="{{ flight.Identification }}">
+                                <input type="hidden" name="number" value="{{ flight.number }}">
+                                <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                                <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
+                                <input type="number" name="rating" min="1" max="5" required>
+                        </td>
+                        <td>
+                                <textarea name="comment" rows="2" cols="20"></textarea>
+                        </td>
+                        <td>
+                                <input type="submit" value="Submit Rating">
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No flights debug workign</p>
+    {% endif %}
+
+    <h2>Your Ratings</h2>
+    {% if ratings %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Airline</th>
+                    <th>Flight Number</th>
+                    <th>Departure Date</th>
+                    <th>Departure Time</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rating in ratings %}
+                    <tr>
+                        <td>{{ rating.airline_name }}</td>
+                        <td>{{ rating.number }}</td>
+                        <td>{{ rating.departure_date }}</td>
+                        <td>{{ rating.departure_time }}</td>
+                        <td>{{ rating.rating }}</td>
+                        <td>{{ rating.comment_ratings }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Rate stuff else statement working</p>
+    {% endif %}
 </body>
 </html>
