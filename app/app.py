@@ -50,7 +50,7 @@ def login_user():
 @app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
-    return redirect("/login_user")
+    return redirect("/home")
 
 @app.route("/")
 def home():
