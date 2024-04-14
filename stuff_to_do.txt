@@ -8,7 +8,7 @@ date.
 
 2. Register: 2 types of user registrations (Customer, and Airline Staff) option via forms as mentioned in
 the part 1 of the project.
-# Not Done
+# Done
 
 Customer use cases:
 After logging in successfully a user(customer) may do any of the following use cases:

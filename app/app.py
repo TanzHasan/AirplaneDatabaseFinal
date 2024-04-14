@@ -17,6 +17,44 @@ mysql_config = {
     "cursorclass": pymysql.cursors.DictCursor,
 }
 
+@app.route('/register_staff', methods=['GET', 'POST'])
+def register_staff():
+    if request.method == 'POST':
+        username = request.form['username']
+        airline_name = request.form['airline_name']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        dob = request.form['dob']
+        
+        connection = pymysql.connect(**mysql_config)
+        
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    INSERT INTO AirlineStaff
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (username, airline_name, password, first_name, last_name, dob))
+            
+                connection.commit()
+                query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = %s"
+                cursor.execute(query, (username, airline_name, password))
+                user = cursor.fetchone()
+
+            if user:
+                session["username"] = user["username"]
+                return redirect("/")
+            else:
+                error = "Invalid email or password"
+                return render_template("login_staff.html", error=error)
+        except Exception as E:
+            return render_template("login_staff.html", error=E)        
+        finally:
+            connection.close()
+    
+    return render_template('register_staff.html')
+
 
 @app.route('/register_user', methods=['GET', 'POST'])
 def register_user():

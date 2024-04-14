@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register User</title>
+</head>
+<body>
+    <h1>Register User</h1>
+    <form method="POST" action="/register_staff">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="airline_name">Airline Name:</label>
+        <input type="airline_name" id="airline_name" name="airline_name" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <label for="first_name">First Name:</label>
+        <input type="text" id="first_name" name="first_name" required>
+
+        <label for="last_name">Last Name:</label>
+        <input type="text" id="last_name" name="last_name" required>
+
+        <label for="dob">Date of Birth:</label>
+        <input type="date" id="dob" name="dob" required>
+
+        <input type="submit" value="Register">
+    </form>
+    <p><a href="/login_staff">Login as Staff</a></p>
+</body>
+</html>
