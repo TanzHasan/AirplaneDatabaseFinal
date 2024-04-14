@@ -20,6 +20,8 @@ mysql_config = {
 
 @app.route("/login_user", methods=["GET", "POST"])
 def login_user():
+    if "username" in session or "email" in session:
+        return home()
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -44,6 +46,11 @@ def login_user():
 
     return render_template("login.html")
 
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return redirect("/login_user")
 
 @app.route("/")
 def home():
