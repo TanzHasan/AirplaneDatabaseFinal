@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, session
 import pymysql
 import os
+import datetime
+from queries import *
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,26 +19,30 @@ mysql_config = {
     "cursorclass": pymysql.cursors.DictCursor,
 }
 
-@app.route('/register_staff', methods=['GET', 'POST'])
+
+@app.route("/register_staff", methods=["GET", "POST"])
 def register_staff():
-    if request.method == 'POST':
-        username = request.form['username']
-        airline_name = request.form['airline_name']
-        password = request.form['password']
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
-        dob = request.form['dob']
-        
+    if request.method == "POST":
+        username = request.form["username"]
+        airline_name = request.form["airline_name"]
+        password = request.form["password"]
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
+        dob = request.form["dob"]
+
         connection = pymysql.connect(**mysql_config)
-        
+
         try:
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO AirlineStaff
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (username, airline_name, password, first_name, last_name, dob))
-            
+                cursor.execute(
+                    query,
+                    (username, airline_name, password, first_name, last_name, dob),
+                )
+
                 connection.commit()
                 query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = %s"
                 cursor.execute(query, (username, airline_name, password))
@@ -49,40 +55,57 @@ def register_staff():
                 error = "Invalid email or password"
                 return render_template("login_staff.html", error=error)
         except Exception as E:
-            return render_template("login_staff.html", error=E)        
+            return render_template("login_staff.html", error=E)
         finally:
             connection.close()
-    
-    return render_template('register_staff.html')
+
+    return render_template("register_staff.html")
 
 
-@app.route('/register_user', methods=['GET', 'POST'])
+@app.route("/register_user", methods=["GET", "POST"])
 def register_user():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
-        building_number = request.form['building_number']
-        street = request.form['street']
-        city = request.form['city']
-        state = request.form['state']
-        zipcode = request.form['zipcode']
-        passport_number = request.form['passport_number']
-        passport_expiration = request.form['passport_expiration']
-        passport_country = request.form['passport_country']
-        dob = request.form['dob']
-        
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
+        building_number = request.form["building_number"]
+        street = request.form["street"]
+        city = request.form["city"]
+        state = request.form["state"]
+        zipcode = request.form["zipcode"]
+        passport_number = request.form["passport_number"]
+        passport_expiration = request.form["passport_expiration"]
+        passport_country = request.form["passport_country"]
+        dob = request.form["dob"]
+
         connection = pymysql.connect(**mysql_config)
-        
+
         try:
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO Customers
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (email, password, first_name, last_name, building_number, street, city, state, zipcode, passport_number, passport_expiration, passport_country, dob))
-                connection.commit() # I need to do this to save
+                cursor.execute(
+                    query,
+                    (
+                        email,
+                        password,
+                        first_name,
+                        last_name,
+                        building_number,
+                        street,
+                        city,
+                        state,
+                        zipcode,
+                        passport_number,
+                        passport_expiration,
+                        passport_country,
+                        dob,
+                    ),
+                )
+                connection.commit()  # I need to do this to save
 
                 # just logging in again
                 query = "SELECT * FROM Customers WHERE Email = %s AND password = %s"
@@ -99,8 +122,9 @@ def register_user():
             return render_template("login_user.html", error=E)
         finally:
             connection.close()
-    
-    return render_template('register_user.html')
+
+    return render_template("register_user.html")
+
 
 @app.route("/login_user", methods=["GET", "POST"])
 def login_user():
@@ -166,8 +190,15 @@ def logout():
     session.clear()
     return redirect("/")
 
+
 @app.route("/")
 def home():
+    if "error" in session:
+        error = session["error"]
+        session["error"] = ""
+    else:
+        error = ""
+
     if "email" in session:
         email = session["email"]
 
@@ -175,80 +206,86 @@ def home():
 
         try:
             with connection.cursor() as cursor:
+                today = datetime.date.today()
                 # I was silly with my fields
-                query = """
-                    SELECT 
-                        f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
-                        f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
-                        f.departure_airport, f.arrival_airport
-                    FROM 
-                        Flight f
-                    WHERE 
-                        (f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time) IN (
-                            SELECT 
-                                t.Airline_Name, t.Identification, t.Number, t.Depart_Date, t.Depart_Time
-                            FROM 
-                                Ticket t
-                            WHERE 
-                                t.Email = %s
-                        )
-                """
-                cursor.execute(query, (email,))
-                flights = cursor.fetchall()
+                query = customer_future_flights
+                cursor.execute(query, (email, today))
+                future_flights = cursor.fetchall()
 
-                query_customer = """
-                    SELECT 
-                        first_name, last_name
-                    FROM 
-                        Customers
-                    WHERE 
-                        email = %s
-                """
+                query = customer_past_flights
+                cursor.execute(query, (email, today))
+                past_flights = cursor.fetchall()
+
+                query_customer = customer_name
                 cursor.execute(query_customer, (email,))
                 customer = cursor.fetchone()
 
-                query_ratings = """
-                    SELECT 
-                        airline_name, identification, number, departure_date, departure_time, rating, comment_ratings
-                    FROM 
-                        Ratings
-                    WHERE 
-                        email = %s
-                """
+                query_ratings = customer_rated_flights
                 cursor.execute(query_ratings, (email,))
                 ratings = cursor.fetchall()
+
                 return render_template(
                     "home.html",
-                    flights=flights,
+                    future_flights=future_flights,
+                    past_flights=past_flights,
                     first_name=customer["first_name"],
                     last_name=customer["last_name"],
                     ratings=ratings,
+                    error=error,
                 )
 
         finally:
             connection.close()
-    elif 'username' in session:
+
+    elif "username" in session:
         return render_template(
-                    "home.html",
-                    first_name='testing',
-                    last_name='testing',
-                )
+            "home.html",
+            first_name="testing",
+            last_name="testing",
+        )
     else:
-        return redirect("/login_user")
+        return render_template("home.html", login=True)
 
 
-@app.route('/rate_flight', methods=['POST'])
+@app.route("/rate_flight", methods=["POST"])
 def rate_flight():
-    email = session['email']
-    airline_name = request.form['airline_name']
-    identification = request.form['identification']
-    number = request.form['number']
-    departure_date = request.form['departure_date']
-    departure_time = request.form['departure_time']
-    rating = request.form['rating']
-    comment = request.form['comment']
+    email = session["email"]
+    airline_name = request.form["airline_name"]
+    identification = request.form["identification"]
+    number = request.form["number"]
+    departure_date = request.form["departure_date"]
+    departure_time = request.form["departure_time"]
+    rating = request.form["rating"]
+    comment = request.form["comment"]
 
-    return redirect('/')
+    connection = pymysql.connect(**mysql_config)
+
+    try:
+        with connection.cursor() as cursor:
+            query = customer_rate
+            cursor.execute(
+                query,
+                (
+                    email,
+                    airline_name,
+                    identification,
+                    number,
+                    departure_date,
+                    departure_time,
+                    rating,
+                    comment,
+                ),
+            )
+
+        connection.commit()
+    except Exception as E:
+        session["error"] = str(E)
+        return redirect("/")
+    finally:
+        connection.close()
+
+    return redirect("/")
+
 
 if __name__ == "__main__":
     app.run()
