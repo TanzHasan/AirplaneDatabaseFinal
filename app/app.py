@@ -262,6 +262,32 @@ def rate_flight():
 
     try:
         with connection.cursor() as cursor:
+            query = customer_rated_check
+            cursor.execute(query,
+                (
+                    email,
+                    airline_name,
+                    identification,
+                    number,
+                    departure_date,
+                    departure_time,
+                ),)
+            
+            rated = cursor.fetchone()
+
+            if rated:
+                query = customer_rated_delete
+                cursor.execute(query,
+                    (
+                        email,
+                        airline_name,
+                        identification,
+                        number,
+                        departure_date,
+                        departure_time,
+                    ),)
+                connection.commit()
+
             query = customer_rate
             cursor.execute(
                 query,

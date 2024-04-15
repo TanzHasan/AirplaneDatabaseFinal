@@ -45,6 +45,27 @@ WHERE
     email = %s
 """
 
+customer_rated_check = """
+SELECT COUNT(*) 
+FROM Ratings
+WHERE email = %s
+    AND airline_name = %s
+    AND identification = %s
+    AND number = %s
+    AND departure_date = %s
+    AND departure_time = %s
+"""
+
+customer_rated_delete = """
+DELETE FROM Ratings
+WHERE email = %s
+    AND airline_name = %s
+    AND identification = %s
+    AND number = %s
+    AND departure_date = %s
+    AND departure_time = %s
+"""
+
 customer_name = """
 SELECT 
     first_name, last_name

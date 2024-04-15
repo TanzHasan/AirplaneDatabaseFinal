@@ -1,0 +1,15 @@
+<!-- navbar.html -->
+<nav>
+    <div class="container">
+      <div class="navbar-left">
+        <a href="/home">Home</a>
+      </div>
+      <div class="navbar-right">
+        {% if 'email' in session or 'username' in session %}
+          <a href="/logout">Logout</a>
+        {% else %}
+          <a href="/login_user">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
