@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flight Search</title>
+</head>
+<body>
+    <h1>Search Flights</h1>
+    <form method="POST" action="/search_flights">
+        <label for="source">Source:</label>
+        <input type="text" id="source" name="source" required><br>
+
+        <label for="source_type">Source Type:</label>
+        <select id="source_type" name="source_type">
+            <option value="airport">Airport</option>
+            <option value="city">City</option>
+        </select><br>
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" name="destination" required><br>
+
+        <label for="destination_type">Destination Type:</label>
+        <select id="destination_type" name="destination_type">
+            <option value="airport">Airport</option>
+            <option value="city">City</option>
+        </select><br>
+
+        <label for="departure_date">Departure Date:</label>
+        <input type="date" id="departure_date" name="departure_date" required><br>
+
+        <label for="trip_type">Trip Type:</label>
+        <select id="trip_type" name="trip_type" onchange="toggleReturnDate()">
+            <option value="one_way">One-way</option>
+            <option value="round_trip">Round Trip</option>
+        </select><br>
+
+        <div id="return_date_container" style="display: none;">
+            <label for="return_date">Return Date:</label>
+            <input type="date" id="return_date" name="return_date"><br>
+        </div>
+
+        <input type="submit" value="Search">
+    </form>
+
+    <script>
+        function toggleReturnDate() {
+            var tripType = document.getElementById("trip_type").value;
+            var returnDateContainer = document.getElementById("return_date_container");
+
+            if (tripType === "round_trip") {
+                returnDateContainer.style.display = "block";
+            } else {
+                returnDateContainer.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

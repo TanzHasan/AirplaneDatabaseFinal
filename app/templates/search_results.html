@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    {% if flights %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Airline</th>
+                    <th>Flight Number</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Base Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                    <tr>
+                        <td>{{ flight.Airline_Name }}</td>
+                        <td>{{ flight.number }}</td>
+                        <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
+                        <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
+                        <td>{{ flight.base_price }}</td>
+                        <td>{{ flight.status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No flights found matching the search criteria.</p>
+    {% endif %}
+    <a href="/search_flights">Back to Search</a>
+</body>
+</html>

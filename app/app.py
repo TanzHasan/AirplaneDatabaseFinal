@@ -312,6 +312,63 @@ def rate_flight():
 
     return redirect("/")
 
+@app.route('/search_flights', methods=['GET', 'POST'])
+def search_flights():
+    if request.method == 'POST':
+        source = request.form['source']
+        source_type = request.form['source_type']
+        destination = request.form['destination']
+        destination_type = request.form['destination_type']
+        departure_date = request.form['departure_date']
+        trip_type = request.form['trip_type']
+        return_date = request.form['return_date'] if trip_type == 'round_trip' else None
+
+        connection = pymysql.connect(**mysql_config)
+
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    SELECT 
+                        f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
+                        f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
+                        f.departure_airport, f.arrival_airport
+                    FROM 
+                        Flight f, Airport a, Airport b
+                    WHERE 
+                        f.departure_airport = a.airport_code AND
+                        f.arrival_airport = b.airport_code AND
+                        f.departure_date = %s AND
+                        f.departure_date >= %s
+                """
+                params = [departure_date, datetime.date.today()]
+
+                if source_type == 'airport':
+                    query += " AND f.departure_airport = %s"
+                    params.append(source)
+                else:
+                    query += " AND a.city = %s"
+                    params.append(source)
+
+                if destination_type == 'airport':
+                    query += " AND f.arrival_airport = %s"
+                    params.append(destination)
+                else:
+                    query += " AND b.city = %s"
+                    params.append(destination)
+
+                # if trip_type == 'round_trip' and return_date:
+                #     query += " AND f.isroundtrip = true AND f.arrival_date = %s"
+                #     params.append(return_date)
+
+                cursor.execute(query, params)
+                flights = cursor.fetchall()
+
+                return render_template('search_results.html', flights=flights)
+
+        finally:
+            connection.close()
+
+    return render_template('search_flights.html')
 
 if __name__ == "__main__":
     app.run()

@@ -1,6 +1,9 @@
 1. View Public Info: All users, whether logged in or not, can
 a. Search for future flights based on source city/airport name, destination city/airport name,
 departure date for one way (departure and return dates for round trip).
+
+# Almost Done return not done
+
 b. Will be able to see the flights status based on airline name, flight number, arrival/departure
 date.
 
@@ -17,7 +20,7 @@ After logging in successfully a user(customer) may do any of the following use c
 The default should be showing for the future flights. Optionally you may include a way for the user to
 specify a range of dates, specify destination and/or source airport name or city name etc.
 
-# Almost done just add date check for future
+# Done
 
 2. Search for flights: Search for future flights (one way or round trip) based on source city/airport name,
 destination city/airport name, dates (departure or return).
@@ -40,7 +43,7 @@ customer. The ticket will be available again in the system and purchasable by ot
 previous flights (for which he/she purchased tickets and already took that flight) for the airline they
 logged in.
 
-# Almost Done just need to finish endpoint
+# Done
 
 6.Track My Spending: Default view will be total amount of money spent in the past year and a bar
 chart/table showing month wise money spent for last 6 months. He/she will also have option to specify
