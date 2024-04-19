@@ -16,6 +16,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>Ticket_ID</th>
                     <th>Airline</th>
                     <th>Flight Number</th>
                     <th>Departure</th>
@@ -26,18 +27,50 @@
             <tbody>
                 {% for flight in future_flights %}
                     <tr>
+                        <td>{{ flight.Ticket_ID }}</td>
+                        <td>{{ flight.Airline_Name }}</td>
+                        <td>{{ flight.number }}</td>
+                        <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
+                        <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
+                        <td>{{ flight.status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No flights debug workign</p>
+    {% endif %}
+
+    <h2>Cancellable Flights</h2>
+    {% if cancellable_flights %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticket_ID</th>
+                    <th>Airline</th>
+                    <th>Flight Number</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in cancellable_flights %}
+                    <tr>
+                        <td>{{ flight.Ticket_ID }}</td>
                         <td>{{ flight.Airline_Name }}</td>
                         <td>{{ flight.number }}</td>
                         <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
                         <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
                         <td>{{ flight.status }}</td>
                         <td>
-                            <form action="/rate_flight" method="POST">
-                                <input type="hidden" name="airline_name" value="{{ flight.Airline_Name }}">
-                                <input type="hidden" name="identification" value="{{ flight.Identification }}">
-                                <input type="hidden" name="number" value="{{ flight.number }}">
-                                <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
-                                <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
+                            <form action="/cancel_ticket" method="POST">
+                                <input type="hidden" name="Ticket_ID" value="{{ flight.Ticket_ID }}">
+                        </td>
+                        <td>
+                                <input type="submit" value="Cancel Ticket">
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}
@@ -52,6 +85,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>Ticket_ID</th>
                     <th>Airline</th>
                     <th>Flight Number</th>
                     <th>Departure</th>
@@ -65,6 +99,7 @@
             <tbody>
                 {% for flight in past_flights %}
                     <tr>
+                        <td>{{ flight.Ticket_ID }}</td>
                         <td>{{ flight.Airline_Name }}</td>
                         <td>{{ flight.number }}</td>
                         <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>

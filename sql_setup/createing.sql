@@ -49,13 +49,17 @@ CREATE TABLE ReturnFlight (
     Returnnumber DOUBLE(10, 0) UNSIGNED NOT NULL,
     Returndeparture_date DATE NOT NULL,
     Returndeparture_time TIME(3) NOT NULL,
-    Flight_Airline_Name VARCHAR(20) NOT NULL,
-    Flight_Identification DOUBLE(10, 0) UNSIGNED NOT NULL,
-    Flight_number DOUBLE(10, 0) UNSIGNED NOT NULL,
-    Flight_departure_date DATE NOT NULL,
-    Flight_departure_time TIME(3) NOT NULL,
-    PRIMARY KEY (Flight_Airline_Name, Flight_Identification, Flight_number, Flight_departure_date, Flight_departure_time),
-    FOREIGN KEY (Flight_Airline_Name, Flight_Identification, Flight_number, Flight_departure_date, Flight_departure_time)
+    Returndeparture_airport VARCHAR(20),
+    Returnarrival_airport VARCHAR(20),
+    Airline_Name VARCHAR(20) NOT NULL,
+    Identification DOUBLE(10, 0) UNSIGNED NOT NULL,
+    number DOUBLE(10, 0) UNSIGNED NOT NULL,
+    departure_date DATE NOT NULL,
+    departure_time TIME(3) NOT NULL,
+    departure_airport VARCHAR(20),
+    arrival_airport VARCHAR(20),
+    PRIMARY KEY (Airline_Name, Identification, number, departure_date, departure_time),
+    FOREIGN KEY (Airline_Name, Identification, number, departure_date, departure_time)
         REFERENCES Flight(Airline_Name, Identification, number, departure_date, departure_time)
 );
 create table AirlineStaff(
@@ -133,7 +137,7 @@ CREATE TABLE Ticket (
     Number 					DOUBLE(10, 0) UNSIGNED NOT NULL,
     Depart_Date 				DATE NOT NULL,
     Depart_Time 				TIME(3) NOT NULL,
-    Email 					VARCHAR(20) NOT NULL,
+    email 					VARCHAR(20) NOT NULL,
     FirstName 					VARCHAR(20) NOT NULL,
     LastName 					VARCHAR(20) NOT NULL,
     DOB 					DATE NOT NULL,
@@ -146,7 +150,7 @@ CREATE TABLE Ticket (
     PRIMARY KEY (Ticket_ID),
     FOREIGN KEY (Airline_Name, Identification, Number, Depart_Date, Depart_Time)
         REFERENCES Flight(Airline_Name, Identification, number, departure_date, departure_time),
-    FOREIGN KEY (Email) REFERENCES Customers(email)
+    FOREIGN KEY (email) REFERENCES Customers(email)
 );
 
 

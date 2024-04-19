@@ -79,6 +79,9 @@ def register_user():
         passport_country = request.form["passport_country"]
         dob = request.form["dob"]
 
+        if '@' not in email:
+            return render_template("login_user.html", error="Bad email")
+
         connection = pymysql.connect(**mysql_config)
 
         try:
@@ -207,10 +210,15 @@ def home():
         try:
             with connection.cursor() as cursor:
                 today = datetime.date.today()
+                tomorrow = today + datetime.timedelta(days=1)
                 # I was silly with my fields
                 query = customer_future_flights
                 cursor.execute(query, (email, today))
                 future_flights = cursor.fetchall()
+
+                query = customer_future_flights
+                cursor.execute(query, (email, tomorrow))
+                cancellable_flights = cursor.fetchall()
 
                 query = customer_past_flights
                 cursor.execute(query, (email, today))
@@ -230,6 +238,7 @@ def home():
                     past_flights=past_flights,
                     first_name=customer["first_name"],
                     last_name=customer["last_name"],
+                    cancellable_flights=cancellable_flights,
                     ratings=ratings,
                     error=error,
                 )
@@ -312,6 +321,71 @@ def rate_flight():
 
     return redirect("/")
 
+@app.route("/cancel_ticket", methods=["POST"])
+def cancel_ticket():
+    email = session["email"]
+
+    ticket_id = request.form["Ticket_ID"]
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            flight_query = """
+                SELECT 
+                    Ticket_ID, Airline_Name, Identification, Number, Depart_Date, Depart_Time,
+                    FirstName, LastName, DOB, CardType, CardNumber, CardExpiration, CardName
+                FROM 
+                    Ticket
+                WHERE 
+                    Ticket_ID = %s
+            """
+            cursor.execute(flight_query, (ticket_id,))
+            flight_details = cursor.fetchone()
+
+            delete_query = "DELETE FROM Ticket WHERE Ticket_ID = %s"
+            cursor.execute(delete_query, (ticket_id,))
+            connection.commit()
+
+            if flight_details:
+                insert_query = """
+                    INSERT INTO Ticket (
+                        Ticket_ID, Airline_Name, Identification, Number, Depart_Date, Depart_Time,
+                        Email, FirstName, LastName, DOB, PurchaseDate, PurchaseTime, 
+                        CardType, CardNumber, CardExpiration, CardName
+                    )
+                    VALUES (
+                        %s, %s, %s, %s, %s, %s,
+                        "None", %s, %s, %s, CURDATE(), CURTIME(),
+                        %s, %s, %s, %s
+                    )
+                """
+                insert_values = (
+                    flight_details["Ticket_ID"],
+                    flight_details["Airline_Name"],
+                    flight_details["Identification"],
+                    flight_details["Number"],
+                    flight_details["Depart_Date"],
+                    flight_details["Depart_Time"],
+                    flight_details["FirstName"],
+                    flight_details["LastName"],
+                    flight_details["DOB"],
+                    flight_details["CardType"],
+                    flight_details["CardNumber"],
+                    flight_details["CardExpiration"],
+                    flight_details["CardName"]
+                )
+                cursor.execute(insert_query, insert_values)
+
+            connection.commit()
+
+    except Exception as E:
+        session["error"] = str(E)
+        return redirect("/")
+
+    finally:
+        connection.close()
+
+    return redirect("/")
+
 @app.route('/search_flights', methods=['GET', 'POST'])
 def search_flights():
     if request.method == 'POST':
@@ -327,44 +401,82 @@ def search_flights():
 
         try:
             with connection.cursor() as cursor:
-                query = """
-                    SELECT 
-                        f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
-                        f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
-                        f.departure_airport, f.arrival_airport
-                    FROM 
-                        Flight f, Airport a, Airport b
-                    WHERE 
-                        f.departure_airport = a.airport_code AND
-                        f.arrival_airport = b.airport_code AND
-                        f.departure_date = %s AND
-                        f.departure_date >= %s
-                """
-                params = [departure_date, datetime.date.today()]
+                if trip_type != 'round_trip':
+                    query = """
+                        SELECT 
+                            f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
+                            f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
+                            f.departure_airport, f.arrival_airport
+                        FROM 
+                            Flight f, Airport a, Airport b
+                        WHERE 
+                            f.departure_airport = a.airport_code AND
+                            f.arrival_airport = b.airport_code AND
+                            f.departure_date = %s AND
+                            f.departure_date >= %s
+                    """
+                    params = [departure_date, datetime.date.today()]
 
-                if source_type == 'airport':
-                    query += " AND f.departure_airport = %s"
-                    params.append(source)
+                    if source_type == 'airport':
+                        query += " AND f.departure_airport = %s"
+                        params.append(source)
+                    else:
+                        query += " AND a.city = %s"
+                        params.append(source)
+
+                    if destination_type == 'airport':
+                        query += " AND f.arrival_airport = %s"
+                        params.append(destination)
+                    else:
+                        query += " AND b.city = %s"
+                        params.append(destination)
+
+
+                    cursor.execute(query, params)
+                    flights = cursor.fetchall()
+                    if 'email' in session:
+                        return render_template('search_results_user.html', flights=flights, rt=False)
+                    elif 'username' in session:
+                        return render_template('search_results_staff.html', flights=flights, rt=False)
+                    else:
+                        return render_template('search_results.html', flights=flights, rt=False)
                 else:
-                    query += " AND a.city = %s"
-                    params.append(source)
+                    query = """
+                        SELECT 
+                            f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
+                            f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
+                            f.departure_airport, f.arrival_airport
+                        FROM 
+                            ReturnFlight f, Airport a, Airport b
+                        WHERE 
+                            f.departure_airport = a.airport_code AND
+                            f.arrival_airport = b.airport_code AND
+                            f.departure_date = %s AND
+                            f.Returndeparture_date = %s AND
+                            f.departure_date >= %s
+                    """
+                    params = [departure_date, return_date, datetime.date.today()]
 
-                if destination_type == 'airport':
-                    query += " AND f.arrival_airport = %s"
-                    params.append(destination)
-                else:
-                    query += " AND b.city = %s"
-                    params.append(destination)
+                    if source_type == 'airport':
+                        query += " AND f.departure_airport = %s"
+                        params.append(source)
+                    else:
+                        query += " AND a.city = %s"
+                        params.append(source)
 
-                # if trip_type == 'round_trip' and return_date:
-                #     query += " AND f.isroundtrip = true AND f.arrival_date = %s"
-                #     params.append(return_date)
-
-                cursor.execute(query, params)
-                flights = cursor.fetchall()
-
-                return render_template('search_results.html', flights=flights)
-
+                    if destination_type == 'airport':
+                        query += " AND f.arrival_airport = %s"
+                        params.append(destination)
+                    else:
+                        query += " AND b.city = %s"
+                        params.append(destination)
+                    if 'email' in session:
+                        return render_template('search_results_user.html', flights=flights, rt=True)
+                    elif 'username' in session:
+                        return render_template('search_results_staff.html', flights=flights, rt=True)
+                    else:
+                        return render_template('search_results.html', flights=flights, rt=True)
+        
         finally:
             connection.close()
 
