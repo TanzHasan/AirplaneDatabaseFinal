@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flight Status</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Flight Status</h2>
+        {% if flight_status %}
+            <div class="alert alert-info">
+                <p>Flight Status: {{ flight_status }}</p>
+            </div>
+        {% elif error %}
+            <div class="alert alert-danger">
+                <p>Error: {{ error }}</p>
+            </div>
+        {% else %}
+            <form method="POST" action="{{ url_for('see_flight_status') }}">
+                <div class="form-group">
+                    <label for="airline">Airline:</label>
+                    <input type="text" class="form-control" id="airline" name="airline" required>
+                </div>
+                <div class="form-group">
+                    <label for="flightnum">Flight Number:</label>
+                    <input type="text" class="form-control" id="flightnum" name="flightnum" required>
+                </div>
+                <div class="form-group">
+                    <label for="departure_arrival">Departure/Arrival:</label>
+                    <select class="form-control" id="departure_arrival" name="departure_arrival" required>
+                        <option value="departure">Departure</option>
+                        <option value="arrival">Arrival</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="airport">Airport:</label>
+                    <input type="text" class="form-control" id="airport" name="airport" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Check Flight Status</button>
+            </form>
+        {% endif %}
+    </div>
+</body>
+</html>

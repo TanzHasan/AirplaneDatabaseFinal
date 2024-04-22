@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Spending</title>
+</head>
+<body>
+    <h1>Track Spending</h1>
+    <p>Total amount spent from {{ start_date }} to {{ end_date }}: ${{ total_spent }}</p>
+
+    <h2>Monthly Spending</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Year</th>
+                <th>Month</th>
+                <th>Total Spent</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in monthly_spending %}
+            <tr>
+                <td>{{ item.year }}</td>
+                <td>{{ item.month }}</td>
+                <td>${{ item.total_spent }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Select Date Range</h2>
+    <form method="POST">
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date }}"><br>
+
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date }}"><br>
+
+        <input type="submit" value="Filter">
+    </form>
+</body>
+</html>

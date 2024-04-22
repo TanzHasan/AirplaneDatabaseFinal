@@ -147,6 +147,7 @@ CREATE TABLE Ticket (
     CardNumber 					DOUBLE(16, 0) NOT NULL,
     CardExpiration 				DATE NOT NULL,
     CardName 					VARCHAR(50) NOT NULL,
+    price 					DOUBLE(10, 0) NOT NULL, 
     PRIMARY KEY (Ticket_ID),
     FOREIGN KEY (Airline_Name, Identification, Number, Depart_Date, Depart_Time)
         REFERENCES Flight(Airline_Name, Identification, number, departure_date, departure_time),

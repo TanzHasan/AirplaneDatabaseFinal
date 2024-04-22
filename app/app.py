@@ -482,5 +482,141 @@ def search_flights():
 
     return render_template('search_flights.html')
 
+@app.route('/purchase_ticket', methods=['POST'])
+def purchase_ticket():
+    airline = request.form['airline']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+
+    if 'email' not in session:
+        return "Please log in to purchase a ticket."
+
+    email = session['email']
+
+    connection = pymysql.connect(**mysql_config)
+
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT *
+                FROM Flight
+                WHERE Airline_Name = %s AND number = %s AND departure_date = %s
+            """
+            cursor.execute(query, (airline, flight_number, departure_date))
+            flight = cursor.fetchone()
+
+            if flight:
+                query = query = """
+                    UPDATE Ticket
+                    SET Email = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME()
+                    WHERE Ticket_ID = %s
+                """
+                cursor.execute(query, (airline, flight_number, departure_date))
+                ticket = cursor.fetchone()
+
+                if ticket:
+                    query = """
+                        UPDATE Ticket
+                        SET Email = %s
+                        WHERE Ticket_ID = %s
+                    """
+                    cursor.execute(query, (email, ticket['Ticket_ID']))
+                    connection.commit()
+
+                    return redirect("/")
+                else:
+                    session["error"] = "Flight not found"
+                    return redirect("/")
+            else:
+                session["error"] = "Flight not found"
+                return redirect("/")
+
+    finally:
+        connection.close()
+
+@app.route('/see_flight_status', methods=['GET', 'POST'])
+def see_flight_status():
+    if request.method == 'POST':
+        airline = request.form['airline']
+        flightnum = request.form['flightnum']
+        departure_arrival = request.form['departure_arrival']
+        airport = request.form['airport']
+
+        connection = pymysql.connect(**mysql_config)
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                SELECT f.status
+                FROM Flight f
+                WHERE f.Airline_Name = %s AND f.number = %s
+                """
+                if departure_arrival == 'departure':
+                    query += " AND f.departure_airport = %s"
+                else:
+                    query += " AND f.arrival_airport = %s"
+
+                cursor.execute(query, (airline, flightnum, airport))
+
+                result = cursor.fetchone()
+
+                if result:
+                    print(result)
+                    flight_status = result['status']
+                    
+                    return render_template('flight_status.html', flight_status=flight_status)
+                else:
+                    return render_template('flight_status.html', error='Flight not found')
+
+        except Exception as E:
+            session["error"] = str(E)
+            return redirect("/")
+        finally:
+            connection.close()
+
+    return render_template('flight_status.html')
+
+
+@app.route('/spending', methods=['GET', 'POST'])
+def spending():
+    if 'email' not in session:
+        session["error"] = "Must be logged in"
+        return redirect('/')
+
+    email = session['email']
+    
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+    else:
+        end_date = datetime.date.today()
+        start_date = end_date - datetime.timedelta(days=365)
+
+    connection = pymysql.connect(**mysql_config)
+
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT SUM(price) AS total_spent
+                FROM Ticket
+                WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
+            """
+            cursor.execute(query, (email, start_date, end_date))
+            total_spent = cursor.fetchone()['total_spent']
+
+            query = """
+                SELECT YEAR(PurchaseDate) AS year, MONTH(PurchaseDate) AS month, SUM(price) AS total_spent
+                FROM Ticket
+                WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
+                GROUP BY YEAR(PurchaseDate), MONTH(PurchaseDate)
+                ORDER BY YEAR(PurchaseDate), MONTH(PurchaseDate)
+            """
+            cursor.execute(query, (email, start_date, end_date))
+            monthly_spending = cursor.fetchall()
+
+        return render_template('spending.html', total_spent=total_spent, monthly_spending=monthly_spending, start_date=start_date, end_date=end_date)
+
+    finally:
+        connection.close()
+
 if __name__ == "__main__":
     app.run()

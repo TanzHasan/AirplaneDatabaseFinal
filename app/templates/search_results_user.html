@@ -15,6 +15,7 @@
                     <th>Arrival</th>
                     <th>Base Price</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -26,6 +27,14 @@
                         <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
                         <td>{{ flight.base_price }}</td>
                         <td>{{ flight.status }}</td>
+                        <td>
+                            <form action="/purchase_ticket" method="POST">
+                                <input type="hidden" name="airline" value="{{ flight.Airline_Name }}">
+                                <input type="hidden" name="flight_number" value="{{ flight.number }}">
+                                <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                                <input type="submit" value="Purchase">
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
