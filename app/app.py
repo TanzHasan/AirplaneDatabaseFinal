@@ -332,7 +332,7 @@ def cancel_ticket():
             flight_query = """
                 SELECT 
                     Ticket_ID, Airline_Name, Identification, Number, Depart_Date, Depart_Time,
-                    FirstName, LastName, DOB, CardType, CardNumber, CardExpiration, CardName
+                    FirstName, LastName, DOB, CardType, CardNumber, CardExpiration, CardName, price
                 FROM 
                     Ticket
                 WHERE 
@@ -347,15 +347,11 @@ def cancel_ticket():
 
             if flight_details:
                 insert_query = """
-                    INSERT INTO Ticket (
-                        Ticket_ID, Airline_Name, Identification, Number, Depart_Date, Depart_Time,
-                        Email, FirstName, LastName, DOB, PurchaseDate, PurchaseTime, 
-                        CardType, CardNumber, CardExpiration, CardName
-                    )
+                    INSERT INTO Ticket
                     VALUES (
                         %s, %s, %s, %s, %s, %s,
                         "None", %s, %s, %s, CURDATE(), CURTIME(),
-                        %s, %s, %s, %s
+                        %s, %s, %s, %s, %s
                     )
                 """
                 insert_values = (
@@ -371,7 +367,8 @@ def cancel_ticket():
                     flight_details["CardType"],
                     flight_details["CardNumber"],
                     flight_details["CardExpiration"],
-                    flight_details["CardName"]
+                    flight_details["CardName"],
+                    flight_details["price"]
                 )
                 cursor.execute(insert_query, insert_values)
 
@@ -506,7 +503,7 @@ def purchase_ticket():
             flight = cursor.fetchone()
 
             if flight:
-                query = query = """
+                query = """
                     UPDATE Ticket
                     SET Email = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME()
                     WHERE Ticket_ID = %s
@@ -617,6 +614,91 @@ def spending():
 
     finally:
         connection.close()
+
+
+@app.route('/staff_view_flights', methods=['GET', 'POST'])
+def staff_view_flights():
+    if 'username' not in session:
+        return redirect('/login')
+
+    username = session['username']
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+            cursor.execute(query, (username,))
+            airline = cursor.fetchone()['airline_name']
+    finally:
+        connection.close()
+
+    if request.method == 'POST':
+        start_date = request.form['start_date']
+        end_date = request.form['end_date']
+        source = request.form['source']
+        destination = request.form['destination']
+    else:
+        end_date = datetime.date.today() + datetime.timedelta(days=30)
+        start_date = datetime.date.today()
+        source = ''
+        destination = ''
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT *
+                FROM Flight
+                WHERE Airline_Name = %s AND departure_date BETWEEN %s AND %s
+            """
+            params = [airline, start_date, end_date]
+
+            if source:
+                query += " AND departure_airport = %s"
+                params.append(source)
+
+            if destination:
+                query += " AND arrival_airport = %s"
+                params.append(destination)
+
+            cursor.execute(query, params)
+            flights = cursor.fetchall()
+
+        return render_template('staff_view_flights.html', flights=flights, start_date=start_date, end_date=end_date, source=source, destination=destination)
+
+    finally:
+        connection.close()
+
+@app.route('/staff_view_customers', methods=['GET', 'POST'])
+def staff_view_customers():
+    if 'username' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        airline_name = request.form['airline_name']
+        flight_number = request.form['flight_number']
+        departure_date = request.form['departure_date']
+        departure_time = request.form['departure_time']
+
+        connection = pymysql.connect(**mysql_config)
+        connection = pymysql.connect(**mysql_config)
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    SELECT c.email, c.first_name, c.last_name
+                    FROM Ticket t
+                    JOIN Customers c ON t.email = c.email
+                    WHERE t.Airline_Name = %s AND t.Number = %s AND t.Depart_Date = %s AND t.Depart_Time = %s
+                """
+                cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
+                customers = cursor.fetchall()
+
+            return render_template('staff_view_customers.html', customers=customers, airline_name=airline_name, flight_number=flight_number, departure_date=departure_date, departure_time=departure_time)
+
+        finally:
+            connection.close()
+
+    return redirect('/')
 
 if __name__ == "__main__":
     app.run()
