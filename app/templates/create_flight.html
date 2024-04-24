@@ -1,0 +1,58 @@
+<!-- create_flight.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create New Flight</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Create New Flight</h1>
+        <form method="POST" action="/create_flight">
+            <div class="form-group">
+                <label for="flight_number">Flight Number:</label>
+                <input type="text" class="form-control" id="flight_number" name="flight_number" required>
+            </div>
+            <div class="form-group">
+                <label for="identification">Identification:</label>
+                <input type="text" class="form-control" id="identification" name="identification" required>
+            </div>
+            <div class="form-group">
+                <label for="departure_airport">Departure Airport:</label>
+                <input type="text" class="form-control" id="departure_airport" name="departure_airport" required>
+            </div>
+            <div class="form-group">
+                <label for="arrival_airport">Arrival Airport:</label>
+                <input type="text" class="form-control" id="arrival_airport" name="arrival_airport" required>
+            </div>
+            <div class="form-group">
+                <label for="departure_date">Departure Date:</label>
+                <input type="date" class="form-control" id="departure_date" name="departure_date" required>
+            </div>
+            <div class="form-group">
+                <label for="departure_time">Departure Time:</label>
+                <input type="time" class="form-control" id="departure_time" name="departure_time" required>
+            </div>
+            <div class="form-group">
+                <label for="arrival_date">Arrival Date:</label>
+                <input type="date" class="form-control" id="arrival_date" name="arrival_date" required>
+            </div>
+            <div class="form-group">
+                <label for="arrival_time">Arrival Time:</label>
+                <input type="time" class="form-control" id="arrival_time" name="arrival_time" required>
+            </div>
+            <div class="form-group">
+                <label for="base_price">Base Price:</label>
+                <input type="number" class="form-control" id="base_price" name="base_price" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select class="form-control" id="status" name="status">
+                    <option value="On Time">On Time</option>
+                    <option value="Delayed">Delayed</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Flight</button>
+        </form>
+    </div>
+</body>
+</html>

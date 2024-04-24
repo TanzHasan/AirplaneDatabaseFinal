@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    {% if flights %}
+    <table>
+        <thead>
+            <tr>
+                <th>Airline</th>
+                <th>Flight Number</th>
+                <th>Departure Date</th>
+                <th>Departure Time</th>
+                <th>Arrival Date</th>
+                <th>Arrival Time</th>
+                <th>Base Price</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flight in flights %}
+            <tr>
+                <td>{{ flight.Airline_Name }}</td>
+                <td>{{ flight.number }}</td>
+                <td>{{ flight.departure_date }}</td>
+                <td>{{ flight.departure_time }}</td>
+                <td>{{ flight.arrival_date }}</td>
+                <td>{{ flight.arrival_time }}</td>
+                <td>{{ flight.base_price }}</td>
+                <td>{{ flight.status }}</td>
+                <td>
+                    <form action="/change_status" method="POST">
+                        <input type="hidden" name="airline" value="{{ flight.Airline_Name }}">
+                        <input type="hidden" name="flight_number" value="{{ flight.number }}">
+                        <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                        <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
+                        <label for="new_departure_date">New Departure Date:</label>
+                        <input type="date" name="new_departure_date" required><br>
+                        <label for="new_departure_time">New Departure Time:</label>
+                        <input type="time" name="new_departure_time" required><br>
+                        <label for="new_arrival_date">New Arrival Date:</label>
+                        <input type="date" name="new_arrival_date" required><br>
+                        <label for="new_arrival_time">New Arrival Time:</label>
+                        <input type="time" name="new_arrival_time" required><br>
+                        <label for="new_status">New Status:</label>
+                        <select name="new_status">
+                            <option value="delayed">Delayed</option>
+                            <option value="normal">Normal</option>
+                        </select><br>
+                        <input type="submit" value="Change Status">
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No flights found matching the search criteria.</p>
+    {% endif %}
+    <a href="/search_flights">Back to Search</a>
+</body>
+</html>

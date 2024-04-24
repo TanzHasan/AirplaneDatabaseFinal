@@ -251,6 +251,7 @@ def home():
             "home.html",
             first_name="testing",
             last_name="testing",
+            error=error
         )
     else:
         return render_template("home.html", login=True)
@@ -626,9 +627,12 @@ def staff_view_flights():
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
-            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+            query = "SELECT airline FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (username,))
             airline = cursor.fetchone()['airline_name']
+    except Exception as E:
+        session["error"] = str(E)
+        return home()
     finally:
         connection.close()
 
@@ -665,7 +669,9 @@ def staff_view_flights():
             flights = cursor.fetchall()
 
         return render_template('staff_view_flights.html', flights=flights, start_date=start_date, end_date=end_date, source=source, destination=destination)
-
+    except Exception as E:
+        session["error"] = str(E)
+        return redirect("/")
     finally:
         connection.close()
 
@@ -694,11 +700,148 @@ def staff_view_customers():
                 customers = cursor.fetchall()
 
             return render_template('staff_view_customers.html', customers=customers, airline_name=airline_name, flight_number=flight_number, departure_date=departure_date, departure_time=departure_time)
-
+        except Exception as E:
+            session["error"] = str(E)
+            return redirect("/")
         finally:
             connection.close()
 
     return redirect('/')
+
+@app.route('/create_flight', methods=['GET', 'POST'])
+def create_flight():
+    if 'username' not in session:
+        session["error"] = "Must be logged in as staff"
+        return redirect('/')
+
+    username = session['username']
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+            cursor.execute(query, (username,))
+            airline_name = cursor.fetchone()['airline_name']
+    except Exception as E:
+        session["error"] = str(E)
+        return redirect("/")
+    finally:
+        connection.close()
+
+    if request.method == 'POST':
+        flight_number = request.form['flight_number']
+        identification = request.form['identification']
+        departure_airport = request.form['departure_airport']
+        arrival_airport = request.form['arrival_airport']
+        departure_date = request.form['departure_date']
+        departure_time = request.form['departure_time']
+        arrival_date = request.form['arrival_date']
+        arrival_time = request.form['arrival_time']
+        base_price = request.form['base_price']
+        status = "normal" if request.form['status'] == "On Time" else "Delayed"
+        isroundtrip = 'isroundtrip' in request.form
+
+        connection = pymysql.connect(**mysql_config)
+        try:
+            with connection.cursor() as cursor:
+                query = "SELECT type FROM Airport WHERE airport_code = %s"
+                cursor.execute(query, (departure_airport,))
+                departure_airport_type = cursor.fetchone()['type']
+
+                cursor.execute(query, (arrival_airport,))
+                arrival_airport_type = cursor.fetchone()['type']
+
+                if departure_airport_type != arrival_airport_type:
+                    session["error"] = "Error: Domestic and international airports cannot be mixed for a flight."
+                    return redirect('/')
+
+            with connection.cursor() as cursor:
+                query = """
+                    INSERT INTO Flight
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (airline_name, identification, flight_number, departure_date, departure_time, arrival_date, arrival_time, base_price, status, isroundtrip, departure_airport, arrival_airport))
+                connection.commit()
+
+            return redirect('/')
+
+        except Exception as E:
+            if "Unknown column" in str(E):
+                return redirect("/")
+            session["error"] = str(E)
+            return redirect("/")
+
+        finally:
+            connection.close()
+
+    return render_template('create_flight.html', airline_name=airline_name)
+
+@app.route('/change_status', methods=['POST'])
+def change_status():
+    if 'username' not in session:
+        session["error"] = "Must be logged in as staff"
+        return redirect('/')
+
+    airline = request.form['airline']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    departure_time = request.form['departure_time']
+    new_departure_date = request.form['new_departure_date']
+    new_departure_time = request.form['new_departure_time']
+    new_arrival_date = request.form['new_arrival_date']
+    new_arrival_time = request.form['new_arrival_time']
+    new_status = request.form['new_status']
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT Ticket_ID, email, FirstName, LastName, DOB, PurchaseDate, PurchaseTime,
+                       CardType, CardNumber, CardExpiration, CardName, price, Identification
+                FROM Ticket
+                WHERE Airline_Name = %s AND Number = %s AND Depart_Date = %s AND Depart_Time = %s
+            """
+            cursor.execute(query, (airline, flight_number, departure_date, departure_time))
+            tickets = cursor.fetchall()
+
+            query = """
+                DELETE FROM Ticket
+                WHERE Airline_Name = %s AND Number = %s AND Depart_Date = %s AND Depart_Time = %s
+            """
+            cursor.execute(query, (airline, flight_number, departure_date, departure_time))
+            connection.commit()
+
+            query = """
+                UPDATE Flight
+                SET status = %s, departure_date = %s, departure_time = %s, arrival_date = %s, arrival_time = %s
+                WHERE Airline_Name = %s AND number = %s AND departure_date = %s AND departure_time = %s
+            """
+            cursor.execute(query, (new_status, new_departure_date, new_departure_time, new_arrival_date, new_arrival_time,
+                                   airline, flight_number, departure_date, departure_time))
+            connection.commit()
+
+            for ticket in tickets:
+                query = """
+                    INSERT INTO Ticket
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (ticket['Ticket_ID'], airline, ticket['Identification'], flight_number,
+                                       new_departure_date, new_departure_time, ticket['email'], ticket['FirstName'],
+                                       ticket['LastName'], ticket['DOB'], ticket['PurchaseDate'], ticket['PurchaseTime'],
+                                       ticket['CardType'], ticket['CardNumber'], ticket['CardExpiration'], ticket['CardName'],
+                                       ticket['price']))
+            connection.commit()
+
+        return redirect('/')
+
+    except Exception as E:
+        if "Unknown column" in str(E):
+            return redirect("/")
+        session["error"] = str(E)
+        return redirect("/")
+
+    finally:
+        connection.close()
 
 if __name__ == "__main__":
     app.run()

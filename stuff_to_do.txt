@@ -1,3 +1,5 @@
+TURN ROUND TRIP TO TWO FLIGHTS
+
 1. View Public Info: All users, whether logged in or not, can
 a. Search for future flights based on source city/airport name, destination city/airport name,
 departure date for one way (departure and return dates for round trip).
@@ -63,7 +65,7 @@ the next 30 days. He/she will be able to see all the current/future/past flights
 he/she works for based range of dates, source/destination airports/city etc. He/she will be able to see
 all the customers of a particular flight.
 
-# Not Done
+# Done
 
 2. Create new flights: He or she creates a new flight, providing all the needed data, via forms. The
 application should prevent unauthorized users from doing this action. While creating a flight, a check
@@ -71,12 +73,12 @@ should be performed that if an airport is domestic, it should only be able to ha
 same applies for international airports. Defaults will be showing all the future flights operated by the
 airline he/she works for the next 30 days.
 
-# Not Done
+# Done
 
 3. Change Status of flights: He or she changes a flight status (from on-time to delayed or vice versa) via
 forms.
 
-# Not Done
+# Done
 
 4. Add airplane in the system: He or she adds a new airplane, providing all the needed data, via forms.
 The application should prevent unauthorized users from doing this action. In the confirmation page,
