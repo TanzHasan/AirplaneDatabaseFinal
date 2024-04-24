@@ -843,5 +843,58 @@ def change_status():
     finally:
         connection.close()
 
+
+@app.route('/add_airplane', methods=['GET', 'POST'])
+def add_airplane():
+    if 'username' not in session:
+        session["error"] = "Must be logged in as staff"
+        return redirect('/')
+
+    username = session['username']
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+            cursor.execute(query, (username,))
+            airline_name = cursor.fetchone()['airline_name']
+
+            query = "SELECT * FROM Airplane WHERE Airline_Name = %s"
+            cursor.execute(query, (airline_name,))
+            airplanes = cursor.fetchall()
+
+        if request.method == 'POST':
+            identification = request.form['identification']
+            seats = request.form['seats']
+            model = request.form['model']
+            manufacturing_company = request.form['manufacturing_company']
+            manufacture_date = request.form['manufacture_date']
+            age = request.form['age']
+
+            with connection.cursor() as cursor:
+                query = """
+                    INSERT INTO Airplane
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (airline_name, identification, seats, model, manufacturing_company, manufacture_date, age))
+                connection.commit()
+
+            return redirect('/add_airplane')
+
+        return render_template('add_airplane.html', airline_name=airline_name, airplanes=airplanes)
+
+    except Exception as e:
+        session["error"] = str(e)
+        return redirect("/")
+
+    finally:
+        connection.close()
+
+
+@app.route('/add_airport', methods=['GET', 'POST'])
+def add_airport():
+    pass
+#will do later
+
 if __name__ == "__main__":
     app.run()

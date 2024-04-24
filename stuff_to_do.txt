@@ -84,7 +84,7 @@ forms.
 The application should prevent unauthorized users from doing this action. In the confirmation page,
 she/he will be able to see all the airplanes owned by the airline he/she works for.
 
-# Not Done
+# Done
 
 5. Add new airport in the system: He or she adds a new airport, providing all the needed data, via
 forms. The application should prevent unauthorized users from doing this action.

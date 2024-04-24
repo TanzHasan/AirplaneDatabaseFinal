@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Airport</title>
+</head>
+<body>
+    <h1>Add Airport</h1>
+    <form action="/add_airport" method="POST">
+        <label for="airport_code">Airport Code:</label>
+        <input type="text" id="airport_code" name="airport_code" required><br>
+
+        <label for="airport_name">Airport Name:</label>
+        <input type="text" id="airport_name" name="airport_name" required><br>
+
+        <label for="city">City:</label>
+        <input type="text" id="city" name="city" required><br>
+
+        <label for="country">Country:</label>
+        <input type="text" id="country" name="country" required><br>
+
+        <label for="num_terminals">Number of Terminals:</label>
+        <input type="number" id="num_terminals" name="num_terminals" required><br>
+
+        <label for="type">Type:</label>
+        <select id="type" name="type" required>
+            <option value="domestic">Domestic</option>
+            <option value="international">International</option>
+            <option value="both">Both</option>
+        </select><br>
+
+        <input type="submit" value="Add Airport">
+    </form>
+</body>
+</html>
