@@ -763,7 +763,22 @@ def create_flight():
                 if departure_airport_type != arrival_airport_type:
                     session["error"] = "Error: Domestic and international airports cannot be mixed for a flight."
                     return redirect('/')
+                query = """
+                    SELECT *
+                    FROM Procedures
+                    WHERE Airline_Name = %s AND Identification = %s
+                    AND (
+                        (StartDate BETWEEN %s AND %s) OR
+                        (EndDate BETWEEN %s AND %s)
+                    )
+                """
+                cursor.execute(query, (airline_name, identification, departure_date, arrival_date, departure_date, arrival_date))
+                overlapping_flight = cursor.fetchone()
 
+                if overlapping_flight:
+                    session["error"] = "A maintenance period is scheduled during the flight. Cannot schedule maintenance."
+                    return redirect("/")
+                
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO Flight
@@ -957,6 +972,65 @@ def staff_view_ratings():
 
     finally:
         connection.close()
+
+@app.route('/schedule_procedure', methods=['GET', 'POST'])
+def schedule_procedure():
+    if 'username' not in session:
+        session["error"] = "Unauthorized access"
+        return redirect("/")
+
+    if request.method == 'POST':
+        airplane_id = request.form['airplane_id']
+        start_date = request.form['start_date']
+        start_time = request.form['start_time']
+        end_date = request.form['end_date']
+        end_time = request.form['end_time']
+
+        connection = pymysql.connect(**mysql_config)
+        try:
+            with connection.cursor() as cursor:
+
+                query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+                cursor.execute(query, (session["username"],))
+                airline_name = cursor.fetchone()['airline_name']
+
+                query = "SELECT * FROM Airplane WHERE Airline_Name = %s AND Identification = %s"
+                cursor.execute(query, (airline_name, airplane_id))
+                airplane = cursor.fetchone()
+
+                if not airplane:
+                    session["error"] = "Airplane not found"
+                    return redirect("/")
+                
+                query = """
+                SELECT *
+                FROM Flight
+                WHERE Airline_Name = %s AND Identification = %s
+                AND (
+                    (departure_date BETWEEN %s AND %s) OR
+                    (arrival_date BETWEEN %s AND %s)
+                )
+                """
+                cursor.execute(query, (airline_name, airplane_id, start_date, end_date, start_date, end_date))
+                overlapping_flight = cursor.fetchone()
+
+                if overlapping_flight:
+                    session["error"] = "A flight is scheduled during the maintenance period. Cannot schedule maintenance."
+                    return redirect("/")
+
+                query = """
+                    INSERT INTO Procedures
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (airline_name, airplane_id, start_date, start_time, end_date, end_time))
+                connection.commit()
+
+            return redirect("/")
+
+        finally:
+            connection.close()
+
+    return render_template('schedule_procedure.html')
 
 
 if __name__ == "__main__":
