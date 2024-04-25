@@ -33,6 +33,7 @@
                     <th>Flight Number</th>
                     <th>Departure</th>
                     <th>Arrival</th>
+                    <th>Average Rating</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -43,6 +44,7 @@
                     <td>{{ flight.number }}</td>
                     <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
                     <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
+                    <td>{{ flight.average_rating }}</td>
                     <td>
                         <form action="/staff_view_customers" method="POST">
                             <input type="hidden" name="airline_name" value="{{ flight.Airline_Name }}">
@@ -50,6 +52,13 @@
                             <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
                             <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
                             <button type="submit" class="btn btn-info">View Customers</button>
+                        </form>
+                        <form action="/staff_view_ratings" method="POST">
+                            <input type="hidden" name="airline_name" value="{{ flight.Airline_Name }}">
+                            <input type="hidden" name="flight_number" value="{{ flight.number }}">
+                            <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                            <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
+                            <button type="submit" class="btn btn-secondary">View Ratings</button>
                         </form>
                     </td>
                 </tr>

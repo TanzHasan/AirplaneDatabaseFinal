@@ -15,7 +15,7 @@
                 <p>Error: {{ error }}</p>
             </div>
         {% else %}
-            <form method="POST" action="{{ url_for('see_flight_status') }}">
+            <form method="POST" action="/see_flight_status">
                 <div class="form-group">
                     <label for="airline">Airline:</label>
                     <input type="text" class="form-control" id="airline" name="airline" required>

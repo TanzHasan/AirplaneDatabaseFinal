@@ -132,7 +132,7 @@ def register_user():
 @app.route("/login_user", methods=["GET", "POST"])
 def login_user():
     if "username" in session or "email" in session:
-        return home()
+        return redirect("/")
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
@@ -161,7 +161,7 @@ def login_user():
 @app.route("/login_staff", methods=["GET", "POST"])
 def login_staff():
     if "username" in session or "email" in session:
-        return home()
+        return redirect("/")
     if request.method == "POST":
         username = request.form["username"]
         airline_name = request.form["airline_name"]
@@ -254,7 +254,7 @@ def home():
             error=error
         )
     else:
-        return render_template("home.html", login=True)
+        return render_template("home.html", login=True, error=error)
 
 
 @app.route("/rate_flight", methods=["POST"])
@@ -627,12 +627,12 @@ def staff_view_flights():
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
-            query = "SELECT airline FROM AirlineStaff WHERE username = %s"
+            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (username,))
             airline = cursor.fetchone()['airline_name']
     except Exception as E:
         session["error"] = str(E)
-        return home()
+        return redirect("/")
     finally:
         connection.close()
 
@@ -667,6 +667,15 @@ def staff_view_flights():
 
             cursor.execute(query, params)
             flights = cursor.fetchall()
+            for flight in flights:
+                query = """
+                    SELECT AVG(rating) AS average_rating
+                    FROM Ratings
+                    WHERE airline_name = %s AND number = %s AND departure_date = %s AND departure_time = %s
+                """
+                cursor.execute(query, (flight['Airline_Name'], flight['number'], flight['departure_date'], flight['departure_time']))
+                result = cursor.fetchone()
+                flight['average_rating'] = result['average_rating'] if result['average_rating'] else 'N/A'
 
         return render_template('staff_view_flights.html', flights=flights, start_date=start_date, end_date=end_date, source=source, destination=destination)
     except Exception as E:
@@ -893,8 +902,62 @@ def add_airplane():
 
 @app.route('/add_airport', methods=['GET', 'POST'])
 def add_airport():
-    pass
-#will do later
+    if 'username' not in session:
+        session["error"] = "Unauthorized access"
+        return redirect("/")
+
+    if request.method == 'POST':
+        airport_code = request.form['airport_code']
+        airport_name = request.form['airport_name']
+        city = request.form['city']
+        country = request.form['country']
+        num_terminals = request.form['num_terminals']
+        airport_type = request.form['type']
+
+        connection = pymysql.connect(**mysql_config)
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    INSERT INTO Airport
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(query, (airport_code, airport_name, city, country, num_terminals, airport_type))
+                connection.commit()
+
+            return redirect('/')
+
+        except Exception as e:
+            session["error"] = str(e)
+            return redirect('/')
+
+        finally:
+            connection.close()
+
+    return render_template('add_airport.html')
+
+@app.route('/staff_view_ratings', methods=['POST'])
+def staff_view_ratings():
+    airline_name = request.form['airline_name']
+    flight_number = request.form['flight_number']
+    departure_date = request.form['departure_date']
+    departure_time = request.form['departure_time']
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT email, rating, comment_ratings
+                FROM Ratings
+                WHERE airline_name = %s AND number = %s AND departure_date = %s AND departure_time = %s
+            """
+            cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
+            ratings = cursor.fetchall()
+
+        return render_template('staff_view_ratings.html', ratings=ratings, airline_name=airline_name, flight_number=flight_number, departure_date=departure_date, departure_time=departure_time)
+
+    finally:
+        connection.close()
+
 
 if __name__ == "__main__":
     app.run()

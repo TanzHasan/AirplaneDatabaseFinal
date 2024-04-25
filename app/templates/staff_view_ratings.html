@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Flight Ratings</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Flight Ratings</h1>
+        <p><strong>Airline:</strong> {{ airline_name }}</p>
+        <p><strong>Flight Number:</strong> {{ flight_number }}</p>
+        <p><strong>Departure Date:</strong> {{ departure_date }}</p>
+        <p><strong>Departure Time:</strong> {{ departure_time }}</p>
+        <hr>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Customer Email</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rating in ratings %}
+                <tr>
+                    <td>{{ rating.email }}</td>
+                    <td>{{ rating.rating }}</td>
+                    <td>{{ rating.comment_ratings }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="/staff_view_flights" class="btn btn-secondary">Back to Flights</a>
+    </div>
+</body>
+</html>

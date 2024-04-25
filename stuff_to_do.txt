@@ -65,7 +65,7 @@ the next 30 days. He/she will be able to see all the current/future/past flights
 he/she works for based range of dates, source/destination airports/city etc. He/she will be able to see
 all the customers of a particular flight.
 
-# Done
+# Not Done
 
 2. Create new flights: He or she creates a new flight, providing all the needed data, via forms. The
 application should prevent unauthorized users from doing this action. While creating a flight, a check
@@ -89,12 +89,12 @@ she/he will be able to see all the airplanes owned by the airline he/she works f
 5. Add new airport in the system: He or she adds a new airport, providing all the needed data, via
 forms. The application should prevent unauthorized users from doing this action.
 
-# Not Done
+# Done
 
 6. View flight ratings: Airline Staff will be able to see each flight’s average ratings and all the comments
 and ratings of that flight given by the customers.
 
-# Not Done
+# Done
 
 7. Schedule Maintenance: Airline staff should be able to schedule maintenance (by providing start date
 and time and end date and time) for a particular airplane (identified by airline name and airplane id).

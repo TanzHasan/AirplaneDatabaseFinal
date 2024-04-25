@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>Add Airplane</h1>
-    <form action="{{ url_for('add_airplane') }}" method="POST">
+    <form action="/add_airplane" method="POST">
         <label for="airline_name">Airline Name:</label>
         <input type="text" id="airline_name" name="airline_name" value="{{ airline_name }}" readonly><br>
 
