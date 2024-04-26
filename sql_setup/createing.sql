@@ -65,7 +65,7 @@ CREATE TABLE ReturnFlight (
 create table AirlineStaff(
 	username 			VARCHAR(20) NOT NULL,
 	airline_name			VARCHAR(20) NOT NULL, 
-	password			VARCHAR(20) NOT NULL, 
+	password			VARCHAR(50) NOT NULL, 
 	first_name			VARCHAR(20),
 	last_name			VARCHAR(20), 
 	DOB			DATE, 
@@ -92,7 +92,7 @@ create table EmailAddress(
 
 CREATE TABLE Customers (
     email VARCHAR(20) NOT NULL,
-    password VARCHAR(20) NOT NULL, 
+    password VARCHAR(50) NOT NULL, 
     first_name VARCHAR(20) NOT NULL, 
     last_name VARCHAR(20) NOT NULL, 
     building_number DOUBLE(10, 0) UNSIGNED NOT NULL,

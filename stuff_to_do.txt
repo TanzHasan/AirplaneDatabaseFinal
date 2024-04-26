@@ -1,7 +1,7 @@
 TURN ROUND TRIP TO TWO FLIGHTS
 
 0. Hash the passwords
-Not done
+Done
 
 1. View Public Info: All users, whether logged in or not, can
 a. Search for future flights based on source city/airport name, destination city/airport name,
@@ -108,18 +108,18 @@ and ratings of that flight given by the customers.
 and time and end date and time) for a particular airplane (identified by airline name and airplane id).
 Airplanes under maintenance cannot be assigned to a flight during the maintenance period.
 
-# Flight Done maintenance test not done
+# Done
 
 8. View frequent customers: Airline Staff will also be able to see the most frequent customer within
 the last year. In addition, Airline Staff will be able to see a list of all flights a particular Customer has
 taken only on that particular airline.
 
-# Not Done
+# Done
 
 9. View Earned Revenue: Show total amount of revenue earned from ticket sales in the last month and
 last year.
 
-# Not Done
+# Done
 
 10. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
 

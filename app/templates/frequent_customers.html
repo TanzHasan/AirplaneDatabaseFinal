@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frequent Customers and Customer Flights</title>
+</head>
+<body>
+    <h1>Most Frequent Customer (Last Year)</h1>
+    {% if frequent_customer %}
+        <p>Email: {{ frequent_customer.email }}</p>
+        <p>Name: {{ frequent_customer.first_name }} {{ frequent_customer.last_name }}</p>
+        <p>Number of Flights: {{ frequent_customer.flight_count }}</p>
+    {% else %}
+        <p>No frequent customers found.</p>
+    {% endif %}
+
+    <h2>Flights Taken by Customer</h2>
+    <form action="/frequent_customers" method="POST">
+        <label for="email">Enter Customer Email:</label>
+        <input type="email" id="email" name="email" required>
+        <button type="submit">View Flights</button>
+    </form>
+
+    {% if flights %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Flight Number</th>
+                    <th>Departure Date</th>
+                    <th>Departure Time</th>
+                    <th>Arrival Date</th>
+                    <th>Arrival Time</th>
+                    <th>Departure Airport</th>
+                    <th>Arrival Airport</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                <tr>
+                    <td>{{ flight.number }}</td>
+                    <td>{{ flight.departure_date }}</td>
+                    <td>{{ flight.departure_time }}</td>
+                    <td>{{ flight.arrival_date }}</td>
+                    <td>{{ flight.arrival_time }}</td>
+                    <td>{{ flight.departure_airport }}</td>
+                    <td>{{ flight.arrival_airport }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</body>
+</html>

@@ -36,7 +36,7 @@ def register_staff():
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO AirlineStaff
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, MD5(%s), %s, %s, %s)
                 """
                 cursor.execute(
                     query,
@@ -44,7 +44,7 @@ def register_staff():
                 )
 
                 connection.commit()
-                query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = %s"
+                query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = MD5(%s)"
                 cursor.execute(query, (username, airline_name, password))
                 user = cursor.fetchone()
 
@@ -88,7 +88,7 @@ def register_user():
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO Customers
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, MD5(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(
                     query,
@@ -111,7 +111,7 @@ def register_user():
                 connection.commit()  # I need to do this to save
 
                 # just logging in again
-                query = "SELECT * FROM Customers WHERE Email = %s AND password = %s"
+                query = "SELECT * FROM Customers WHERE Email = %s AND password = MD5(%s)"
                 cursor.execute(query, (email, password))
                 user = cursor.fetchone()
 
@@ -139,7 +139,7 @@ def login_user():
         connection = pymysql.connect(**mysql_config)
         try:
             with connection.cursor() as cursor:
-                query = "SELECT * FROM Customers WHERE Email = %s AND password = %s"
+                query = "SELECT * FROM Customers WHERE Email = %s AND password = MD5(%s)"
                 cursor.execute(query, (email, password))
                 user = cursor.fetchone()
 
@@ -169,7 +169,7 @@ def login_staff():
         connection = pymysql.connect(**mysql_config)
         try:
             with connection.cursor() as cursor:
-                query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = %s"
+                query = "SELECT * FROM AirlineStaff WHERE username = %s AND airline_name = %s AND password = MD5(%s)"
                 cursor.execute(query, (username, airline_name, password))
                 user = cursor.fetchone()
 
@@ -1032,6 +1032,92 @@ def schedule_procedure():
 
     return render_template('schedule_procedure.html')
 
+@app.route('/frequent_customers', methods=['GET', 'POST'])
+def frequent_customers():
+    if 'username' not in session:
+        return redirect('/staff_login')
+
+    current_date = datetime.date.today()
+    one_year_ago = current_date - datetime.timedelta(days=365)
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+            cursor.execute(query, (session["username"],))
+            airline_name = cursor.fetchone()['airline_name']
+            query = """
+                SELECT c.email, c.first_name, c.last_name, COUNT(*) AS flight_count
+                FROM Ticket t
+                NATURAL JOIN Customers c
+                WHERE t.Airline_Name = %s AND c.email != 'None'
+                AND t.Depart_Date BETWEEN %s AND %s
+                GROUP BY c.email, c.first_name, c.last_name
+                ORDER BY flight_count DESC
+                LIMIT 1
+            """
+            cursor.execute(query, (airline_name, one_year_ago, current_date))
+            frequent_customer = cursor.fetchone()
+
+            flights = None
+            if request.method == 'POST':
+                email = request.form['email']
+                query = """
+                    SELECT f.number, f.departure_date, f.departure_time, f.arrival_date, f.arrival_time, f.departure_airport, f.arrival_airport
+                    FROM Ticket t
+                    JOIN Flight f ON t.Airline_Name = f.Airline_Name AND t.Number = f.number AND t.Depart_Date = f.departure_date AND t.Depart_Time = f.departure_time
+                    WHERE t.email = %s AND t.Airline_Name = %s
+                """
+                cursor.execute(query, (email, airline_name))
+                flights = cursor.fetchall()
+
+        return render_template('frequent_customers.html', frequent_customer=frequent_customer, flights=flights)
+
+    finally:
+        connection.close()
+
+@app.route('/earned_revenue')
+def earned_revenue():
+    if 'username' not in session:
+        return redirect('/staff_login')
+
+    current_date = datetime.date.today()
+    one_month_ago = current_date - datetime.timedelta(days=30)
+    one_year_ago = current_date - datetime.timedelta(days=365)
+
+    connection = pymysql.connect(**mysql_config)
+    try:
+        with connection.cursor() as cursor:
+
+            query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
+            cursor.execute(query, (session["username"],))
+            airline_name = cursor.fetchone()['airline_name']
+
+            query = """
+                SELECT SUM(t.price) AS total_revenue
+                FROM Ticket t
+                WHERE t.airline_name = %s
+                AND t.PurchaseDate BETWEEN %s AND %s
+            """
+            cursor.execute(query, (airline_name, one_month_ago, current_date))
+            last_month_revenue = cursor.fetchone()['total_revenue']
+
+            query = """
+                SELECT SUM(t.price) AS total_revenue
+                FROM Ticket t
+                WHERE t.airline_name = %s
+                AND t.PurchaseDate BETWEEN %s AND %s
+            """
+            cursor.execute(query, (airline_name, one_year_ago, current_date))
+            last_year_revenue = cursor.fetchone()['total_revenue']
+            last_month_revenue = 0 if last_month_revenue is None else last_month_revenue
+            last_year_revenue = 0 if last_year_revenue is None else last_year_revenue
+        return render_template('earned_revenue.html', last_month_revenue=last_month_revenue, last_year_revenue=last_year_revenue)
+    except Exception as e:
+        session["error"] = str(e)
+        return redirect("/")
+    finally:
+        connection.close()
 
 if __name__ == "__main__":
     app.run()

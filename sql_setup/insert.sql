@@ -7,10 +7,10 @@ values
 	('PVG', 'Shanghai Intl', 'Shanghai', 'China', 4, 'Both');
 
 insert into Customers values
-("hi@gmail.com", "notgood", "alex", "ander", 370, "Jay Street Metrotech", "New York City", "New York", "11101", "123456789", "2026-12-17", "United States", "2001-11-11"),
-("None", "notgood", "alex", "ander", 370, "Jay Street Metrotech", "New York City", "New York", "11101", "123456789", "2026-12-17", "United States", "2001-11-11"),
-("hello@gmail.com", "amazing", "bob", "ert", 371, "Jay Street Metroootech", "New York City", "New York", "11101", "123457891", "2026-10-17", "United States", "2003-12-15"),
-("bye@gmail.com", "password123", "calvin", "hobbes", 372, "Jay Street Metroootech", "New York City", "New York", "11101", "132457891", "2026-10-17", "United States", "2003-12-15");
+("hi@gmail.com", MD5("notgood"), "alex", "ander", 370, "Jay Street Metrotech", "New York City", "New York", "11101", "123456789", "2026-12-17", "United States", "2001-11-11"),
+("None",  MD5("notgood"), "alex", "ander", 370, "Jay Street Metrotech", "New York City", "New York", "11101", "123456789", "2026-12-17", "United States", "2001-11-11"),
+("hello@gmail.com",  MD5("amazing"), "bob", "ert", 371, "Jay Street Metroootech", "New York City", "New York", "11101", "123457891", "2026-10-17", "United States", "2003-12-15"),
+("bye@gmail.com",  MD5("password123"), "calvin", "hobbes", 372, "Jay Street Metroootech", "New York City", "New York", "11101", "132457891", "2026-10-17", "United States", "2003-12-15");
 
 
 insert into Airplane values 
@@ -19,7 +19,7 @@ insert into Airplane values
 ("Jetblue", 14, 8, "Boeing 747", "Boeing", "2022-10-19", 2);
 
 insert into AirlineStaff values 
-("AliceB", "Jetblue", "Boeinglove", "Alice", "Boeing", "2022-10-17");
+("AliceB", "Jetblue", MD5("Boeinglove"), "Alice", "Boeing", "2022-10-17");
 
 insert into PhoneNumber values
 ("AliceB", "Jetblue", "9127630738");
@@ -36,7 +36,7 @@ insert into Flight values
 
 INSERT INTO Ticket values 
 (5, 'Jetblue', 13, 109, '2029-06-01', '08:50:10', 'hi@gmail.com', 'alex', 'ander', '2001-11-11', '2023-05-30', '16:00:00', 'Visa', '5555666677778888', '2024-09-30', 'Alex Ander', 5),
-(6, 'Jetblue', 13, 109, '2029-06-01', '08:50:10', 'hi@gmail.com', 'xalex', 'ander', '2001-11-11', '2023-05-30', '16:00:00', 'Visa', '5555666677778888', '2024-09-30', 'Alex Ander', 5),
+(6, 'Jetblue', 13, 109, '2029-06-01', '08:50:10', 'hi@gmail.com', 'alex', 'ander', '2001-11-11', '2023-05-30', '16:00:00', 'Visa', '5555666677778888', '2024-09-30', 'Alex Ander', 5),
 (7, 'Jetblue', 13, 109, '2029-06-01', '08:50:10', 'hi@gmail.com', 'alex', 'ander', '2001-11-11', '2023-05-30', '16:00:00', 'Visa', '5555666677778888', '2024-09-30', 'Alex Ander', 5),
 (8, 'Jetblue', 13, 109, '2029-06-01', '08:50:10', 'hi@gmail.com', 'alex', 'ander', '2001-11-11', '2023-05-30', '16:00:00', 'Visa', '5555666677778888', '2024-09-30', 'Alex Ander', 5),
 (9, 'Jetblue', 13, 109, '2029-06-01', '08:50:10', 'hi@gmail.com', 'alex', 'ander', '2001-11-11', '2023-05-30', '16:00:00', 'Visa', '5555666677778888', '2024-09-30', 'Alex Ander', 5),
