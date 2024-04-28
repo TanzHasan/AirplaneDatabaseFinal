@@ -399,7 +399,41 @@ def search_flights():
 
         try:
             with connection.cursor() as cursor:
-                if trip_type != 'round_trip':
+                query = """
+                    SELECT 
+                        f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
+                        f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
+                        f.departure_airport, f.arrival_airport
+                    FROM 
+                        Flight f, Airport a, Airport b
+                    WHERE 
+                        f.departure_airport = a.airport_code AND
+                        f.arrival_airport = b.airport_code AND
+                        f.departure_date = %s AND
+                        f.departure_date >= %s
+                """
+                params = [departure_date, str(datetime.date.today())]
+
+                if source_type == 'airport':
+                    query += " AND f.departure_airport = %s"
+                    params.append(source)
+                else:
+                    query += " AND a.city = %s"
+                    params.append(source)
+
+                if destination_type == 'airport':
+                    query += " AND f.arrival_airport = %s"
+                    params.append(destination)
+                else:
+                    query += " AND b.city = %s"
+                    params.append(destination)
+
+                cursor.execute(query, params)
+                print(query)
+                print(params)
+                outbound_flights = cursor.fetchall()
+
+                if trip_type == 'round_trip':
                     query = """
                         SELECT 
                             f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
@@ -413,68 +447,34 @@ def search_flights():
                             f.departure_date = %s AND
                             f.departure_date >= %s
                     """
-                    params = [departure_date, datetime.date.today()]
-
-                    if source_type == 'airport':
-                        query += " AND f.departure_airport = %s"
-                        params.append(source)
-                    else:
-                        query += " AND a.city = %s"
-                        params.append(source)
+                    params = [return_date, departure_date]
 
                     if destination_type == 'airport':
-                        query += " AND f.arrival_airport = %s"
+                        query += " AND f.departure_airport = %s"
                         params.append(destination)
                     else:
-                        query += " AND b.city = %s"
+                        query += " AND a.city = %s"
                         params.append(destination)
 
+                    if source_type == 'airport':
+                        query += " AND f.arrival_airport = %s"
+                        params.append(source)
+                    else:
+                        query += " AND b.city = %s"
+                        params.append(source)
 
                     cursor.execute(query, params)
-                    flights = cursor.fetchall()
-                    if 'email' in session:
-                        return render_template('search_results_user.html', flights=flights, rt=False)
-                    elif 'username' in session:
-                        return render_template('search_results_staff.html', flights=flights, rt=False)
-                    else:
-                        return render_template('search_results.html', flights=flights, rt=False)
+                    return_flights = cursor.fetchall()
                 else:
-                    query = """
-                        SELECT 
-                            f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
-                            f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
-                            f.departure_airport, f.arrival_airport
-                        FROM 
-                            ReturnFlight f, Airport a, Airport b
-                        WHERE 
-                            f.departure_airport = a.airport_code AND
-                            f.arrival_airport = b.airport_code AND
-                            f.departure_date = %s AND
-                            f.Returndeparture_date = %s AND
-                            f.departure_date >= %s
-                    """
-                    params = [departure_date, return_date, datetime.date.today()]
+                    return_flights = None
 
-                    if source_type == 'airport':
-                        query += " AND f.departure_airport = %s"
-                        params.append(source)
-                    else:
-                        query += " AND a.city = %s"
-                        params.append(source)
+                if 'email' in session:
+                    return render_template('search_results_user.html', outbound_flights=outbound_flights, return_flights=return_flights, rt=trip_type=='round_trip')
+                elif 'username' in session:
+                    return render_template('search_results_staff.html', outbound_flights=outbound_flights, return_flights=return_flights, rt=trip_type=='round_trip')
+                else:
+                    return render_template('search_results.html', outbound_flights=outbound_flights, return_flights=return_flights, rt=trip_type=='round_trip')
 
-                    if destination_type == 'airport':
-                        query += " AND f.arrival_airport = %s"
-                        params.append(destination)
-                    else:
-                        query += " AND b.city = %s"
-                        params.append(destination)
-                    if 'email' in session:
-                        return render_template('search_results_user.html', flights=flights, rt=True)
-                    elif 'username' in session:
-                        return render_template('search_results_staff.html', flights=flights, rt=True)
-                    else:
-                        return render_template('search_results.html', flights=flights, rt=True)
-        
         finally:
             connection.close()
 
