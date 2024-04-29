@@ -79,7 +79,7 @@ def register_user():
         passport_country = request.form["passport_country"]
         dob = request.form["dob"]
 
-        if '@' not in email:
+        if "@" not in email:
             return render_template("login_user.html", error="Bad email")
 
         connection = pymysql.connect(**mysql_config)
@@ -111,7 +111,9 @@ def register_user():
                 connection.commit()  # I need to do this to save
 
                 # just logging in again
-                query = "SELECT * FROM Customers WHERE Email = %s AND password = MD5(%s)"
+                query = (
+                    "SELECT * FROM Customers WHERE Email = %s AND password = MD5(%s)"
+                )
                 cursor.execute(query, (email, password))
                 user = cursor.fetchone()
 
@@ -139,7 +141,9 @@ def login_user():
         connection = pymysql.connect(**mysql_config)
         try:
             with connection.cursor() as cursor:
-                query = "SELECT * FROM Customers WHERE Email = %s AND password = MD5(%s)"
+                query = (
+                    "SELECT * FROM Customers WHERE Email = %s AND password = MD5(%s)"
+                )
                 cursor.execute(query, (email, password))
                 user = cursor.fetchone()
 
@@ -255,7 +259,7 @@ def home():
                 "home_staff.html",
                 first_name=staffinfo["first_name"],
                 last_name=staffinfo["last_name"],
-                error=error
+                error=error,
             )
         except Exception as E:
             session["error"] = str(E)
@@ -263,7 +267,7 @@ def home():
                 "home_staff.html",
                 first_name="Something",
                 last_name="Went Wrong",
-                error=error
+                error=error,
             )
         finally:
             connection.close()
@@ -287,7 +291,8 @@ def rate_flight():
     try:
         with connection.cursor() as cursor:
             query = customer_rated_check
-            cursor.execute(query,
+            cursor.execute(
+                query,
                 (
                     email,
                     airline_name,
@@ -295,13 +300,15 @@ def rate_flight():
                     number,
                     departure_date,
                     departure_time,
-                ),)
-            
+                ),
+            )
+
             rated = cursor.fetchone()
 
             if rated:
                 query = customer_rated_delete
-                cursor.execute(query,
+                cursor.execute(
+                    query,
                     (
                         email,
                         airline_name,
@@ -309,7 +316,8 @@ def rate_flight():
                         number,
                         departure_date,
                         departure_time,
-                    ),)
+                    ),
+                )
                 connection.commit()
 
             query = customer_rate
@@ -335,6 +343,7 @@ def rate_flight():
         connection.close()
 
     return redirect("/")
+
 
 @app.route("/cancel_ticket", methods=["POST"])
 def cancel_ticket():
@@ -383,7 +392,7 @@ def cancel_ticket():
                     flight_details["CardNumber"],
                     flight_details["CardExpiration"],
                     flight_details["CardName"],
-                    flight_details["price"]
+                    flight_details["price"],
                 )
                 cursor.execute(insert_query, insert_values)
 
@@ -398,16 +407,17 @@ def cancel_ticket():
 
     return redirect("/")
 
-@app.route('/search_flights', methods=['GET', 'POST'])
+
+@app.route("/search_flights", methods=["GET", "POST"])
 def search_flights():
-    if request.method == 'POST':
-        source = request.form['source']
-        source_type = request.form['source_type']
-        destination = request.form['destination']
-        destination_type = request.form['destination_type']
-        departure_date = request.form['departure_date']
-        trip_type = request.form['trip_type']
-        return_date = request.form['return_date'] if trip_type == 'round_trip' else None
+    if request.method == "POST":
+        source = request.form["source"]
+        source_type = request.form["source_type"]
+        destination = request.form["destination"]
+        destination_type = request.form["destination_type"]
+        departure_date = request.form["departure_date"]
+        trip_type = request.form["trip_type"]
+        return_date = request.form["return_date"] if trip_type == "round_trip" else None
 
         connection = pymysql.connect(**mysql_config)
 
@@ -428,14 +438,14 @@ def search_flights():
                 """
                 params = [departure_date, str(datetime.date.today())]
 
-                if source_type == 'airport':
+                if source_type == "airport":
                     query += " AND f.departure_airport = %s"
                     params.append(source)
                 else:
                     query += " AND a.city = %s"
                     params.append(source)
 
-                if destination_type == 'airport':
+                if destination_type == "airport":
                     query += " AND f.arrival_airport = %s"
                     params.append(destination)
                 else:
@@ -446,7 +456,7 @@ def search_flights():
                 print(query)
                 print(params)
                 outbound_flights = cursor.fetchall()
-                if trip_type == 'round_trip':
+                if trip_type == "round_trip":
                     query = """
                         SELECT 
                             f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
@@ -462,14 +472,14 @@ def search_flights():
                     """
                     params = [return_date, departure_date]
 
-                    if destination_type == 'airport':
+                    if destination_type == "airport":
                         query += " AND f.departure_airport = %s"
                         params.append(destination)
                     else:
                         query += " AND a.city = %s"
                         params.append(destination)
 
-                    if source_type == 'airport':
+                    if source_type == "airport":
                         query += " AND f.arrival_airport = %s"
                         params.append(source)
                     else:
@@ -481,29 +491,44 @@ def search_flights():
                 else:
                     return_flights = None
 
-                if 'email' in session:
-                    return render_template('search_results_user.html', outbound_flights=outbound_flights, return_flights=return_flights, rt=trip_type=='round_trip')
-                elif 'username' in session:
-                    return render_template('search_results_staff.html', outbound_flights=outbound_flights, return_flights=return_flights, rt=trip_type=='round_trip')
+                if "email" in session:
+                    return render_template(
+                        "search_results_user.html",
+                        outbound_flights=outbound_flights,
+                        return_flights=return_flights,
+                        rt=trip_type == "round_trip",
+                    )
+                elif "username" in session:
+                    return render_template(
+                        "search_results_staff.html",
+                        outbound_flights=outbound_flights,
+                        return_flights=return_flights,
+                        rt=trip_type == "round_trip",
+                    )
                 else:
-                    return render_template('search_results.html', outbound_flights=outbound_flights, return_flights=return_flights, rt=trip_type=='round_trip')
+                    return render_template(
+                        "search_results.html",
+                        outbound_flights=outbound_flights,
+                        return_flights=return_flights,
+                        rt=trip_type == "round_trip",
+                    )
 
         finally:
             connection.close()
 
-    return render_template('search_flights.html')
+    return render_template("search_flights.html")
 
-@app.route('/purchase_ticket', methods=['POST'])
+
+@app.route("/purchase_ticket", methods=["POST"])
 def purchase_ticket():
-
-    if 'email' not in session:
+    if "email" not in session:
         session["error"] = "Please log in to purchase a ticket."
         return redirect("/")
 
-    email = session['email']
-    airline = request.form['airline']
-    flight_number = request.form['flight_number']
-    departure_date = request.form['departure_date']
+    email = session["email"]
+    airline = request.form["airline"]
+    flight_number = request.form["flight_number"]
+    departure_date = request.form["departure_date"]
 
     connection = pymysql.connect(**mysql_config)
 
@@ -532,7 +557,7 @@ def purchase_ticket():
                         SET Email = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME()
                         WHERE Ticket_ID = %s
                     """
-                    cursor.execute(query, (email, ticket['Ticket_ID']))
+                    cursor.execute(query, (email, ticket["Ticket_ID"]))
                     connection.commit()
 
                     return redirect("/")
@@ -546,13 +571,14 @@ def purchase_ticket():
     finally:
         connection.close()
 
-@app.route('/see_flight_status', methods=['GET', 'POST'])
+
+@app.route("/see_flight_status", methods=["GET", "POST"])
 def see_flight_status():
-    if request.method == 'POST':
-        airline = request.form['airline']
-        flightnum = request.form['flightnum']
-        departure_arrival = request.form['departure_arrival']
-        airport = request.form['airport']
+    if request.method == "POST":
+        airline = request.form["airline"]
+        flightnum = request.form["flightnum"]
+        departure_arrival = request.form["departure_arrival"]
+        airport = request.form["airport"]
 
         connection = pymysql.connect(**mysql_config)
         try:
@@ -562,7 +588,7 @@ def see_flight_status():
                 FROM Flight f
                 WHERE f.Airline_Name = %s AND f.number = %s
                 """
-                if departure_arrival == 'departure':
+                if departure_arrival == "departure":
                     query += " AND f.departure_airport = %s"
                 else:
                     query += " AND f.arrival_airport = %s"
@@ -573,11 +599,15 @@ def see_flight_status():
 
                 if result:
                     print(result)
-                    flight_status = result['status']
-                    
-                    return render_template('flight_status.html', flight_status=flight_status)
+                    flight_status = result["status"]
+
+                    return render_template(
+                        "flight_status.html", flight_status=flight_status
+                    )
                 else:
-                    return render_template('flight_status.html', error='Flight not found')
+                    return render_template(
+                        "flight_status.html", error="Flight not found"
+                    )
 
         except Exception as E:
             session["error"] = str(E)
@@ -585,20 +615,20 @@ def see_flight_status():
         finally:
             connection.close()
 
-    return render_template('flight_status.html')
+    return render_template("flight_status.html")
 
 
-@app.route('/spending', methods=['GET', 'POST'])
+@app.route("/spending", methods=["GET", "POST"])
 def spending():
-    if 'email' not in session:
+    if "email" not in session:
         session["error"] = "Must be logged in"
-        return redirect('/')
+        return redirect("/")
 
-    email = session['email']
-    
-    if request.method == 'POST':
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
+    email = session["email"]
+
+    if request.method == "POST":
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
     else:
         end_date = datetime.date.today()
         start_date = end_date - datetime.timedelta(days=365)
@@ -613,7 +643,7 @@ def spending():
                 WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
             """
             cursor.execute(query, (email, start_date, end_date))
-            total_spent = cursor.fetchone()['total_spent']
+            total_spent = cursor.fetchone()["total_spent"]
 
             query = """
                 SELECT YEAR(PurchaseDate) AS year, MONTH(PurchaseDate) AS month, SUM(price) AS total_spent
@@ -625,41 +655,47 @@ def spending():
             cursor.execute(query, (email, start_date, end_date))
             monthly_spending = cursor.fetchall()
 
-        return render_template('spending.html', total_spent=total_spent, monthly_spending=monthly_spending, start_date=start_date, end_date=end_date)
+        return render_template(
+            "spending.html",
+            total_spent=total_spent,
+            monthly_spending=monthly_spending,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
     finally:
         connection.close()
 
 
-@app.route('/staff_view_flights', methods=['GET', 'POST'])
+@app.route("/staff_view_flights", methods=["GET", "POST"])
 def staff_view_flights():
-    if 'username' not in session:
-        return redirect('/login')
+    if "username" not in session:
+        return redirect("/login")
 
-    username = session['username']
+    username = session["username"]
 
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
             query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (username,))
-            airline = cursor.fetchone()['airline_name']
+            airline = cursor.fetchone()["airline_name"]
     except Exception as E:
         session["error"] = str(E)
         return redirect("/")
     finally:
         connection.close()
 
-    if request.method == 'POST':
-        start_date = request.form['start_date']
-        end_date = request.form['end_date']
-        source = request.form['source']
-        destination = request.form['destination']
+    if request.method == "POST":
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
+        source = request.form["source"]
+        destination = request.form["destination"]
     else:
         end_date = datetime.date.today() + datetime.timedelta(days=30)
         start_date = datetime.date.today()
-        source = ''
-        destination = ''
+        source = ""
+        destination = ""
 
     connection = pymysql.connect(**mysql_config)
     try:
@@ -687,27 +723,45 @@ def staff_view_flights():
                     FROM Ratings
                     WHERE airline_name = %s AND number = %s AND departure_date = %s AND departure_time = %s
                 """
-                cursor.execute(query, (flight['Airline_Name'], flight['number'], flight['departure_date'], flight['departure_time']))
+                cursor.execute(
+                    query,
+                    (
+                        flight["Airline_Name"],
+                        flight["number"],
+                        flight["departure_date"],
+                        flight["departure_time"],
+                    ),
+                )
                 result = cursor.fetchone()
-                flight['average_rating'] = result['average_rating'] if result['average_rating'] else 'N/A'
+                flight["average_rating"] = (
+                    result["average_rating"] if result["average_rating"] else "N/A"
+                )
 
-        return render_template('staff_view_flights.html', flights=flights, start_date=start_date, end_date=end_date, source=source, destination=destination)
+        return render_template(
+            "staff_view_flights.html",
+            flights=flights,
+            start_date=start_date,
+            end_date=end_date,
+            source=source,
+            destination=destination,
+        )
     except Exception as E:
         session["error"] = str(E)
         return redirect("/")
     finally:
         connection.close()
 
-@app.route('/staff_view_customers', methods=['GET', 'POST'])
-def staff_view_customers():
-    if 'username' not in session:
-        return redirect('/login')
 
-    if request.method == 'POST':
-        airline_name = request.form['airline_name']
-        flight_number = request.form['flight_number']
-        departure_date = request.form['departure_date']
-        departure_time = request.form['departure_time']
+@app.route("/staff_view_customers", methods=["GET", "POST"])
+def staff_view_customers():
+    if "username" not in session:
+        return redirect("/login")
+
+    if request.method == "POST":
+        airline_name = request.form["airline_name"]
+        flight_number = request.form["flight_number"]
+        departure_date = request.form["departure_date"]
+        departure_time = request.form["departure_time"]
 
         connection = pymysql.connect(**mysql_config)
         connection = pymysql.connect(**mysql_config)
@@ -719,64 +773,76 @@ def staff_view_customers():
                     JOIN Customers c ON t.email = c.email
                     WHERE t.Airline_Name = %s AND t.Number = %s AND t.Depart_Date = %s AND t.Depart_Time = %s
                 """
-                cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
+                cursor.execute(
+                    query, (airline_name, flight_number, departure_date, departure_time)
+                )
                 customers = cursor.fetchall()
 
-            return render_template('staff_view_customers.html', customers=customers, airline_name=airline_name, flight_number=flight_number, departure_date=departure_date, departure_time=departure_time)
+            return render_template(
+                "staff_view_customers.html",
+                customers=customers,
+                airline_name=airline_name,
+                flight_number=flight_number,
+                departure_date=departure_date,
+                departure_time=departure_time,
+            )
         except Exception as E:
             session["error"] = str(E)
             return redirect("/")
         finally:
             connection.close()
 
-    return redirect('/')
+    return redirect("/")
 
-@app.route('/create_flight', methods=['GET', 'POST'])
+
+@app.route("/create_flight", methods=["GET", "POST"])
 def create_flight():
-    if 'username' not in session:
+    if "username" not in session:
         session["error"] = "Must be logged in as staff"
-        return redirect('/')
+        return redirect("/")
 
-    username = session['username']
+    username = session["username"]
 
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
             query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (username,))
-            airline_name = cursor.fetchone()['airline_name']
+            airline_name = cursor.fetchone()["airline_name"]
     except Exception as E:
         session["error"] = str(E)
         return redirect("/")
     finally:
         connection.close()
 
-    if request.method == 'POST':
-        flight_number = request.form['flight_number']
-        identification = request.form['identification']
-        departure_airport = request.form['departure_airport']
-        arrival_airport = request.form['arrival_airport']
-        departure_date = request.form['departure_date']
-        departure_time = request.form['departure_time']
-        arrival_date = request.form['arrival_date']
-        arrival_time = request.form['arrival_time']
-        base_price = request.form['base_price']
-        status = "normal" if request.form['status'] == "On Time" else "Delayed"
-        isroundtrip = 'isroundtrip' in request.form
+    if request.method == "POST":
+        flight_number = request.form["flight_number"]
+        identification = request.form["identification"]
+        departure_airport = request.form["departure_airport"]
+        arrival_airport = request.form["arrival_airport"]
+        departure_date = request.form["departure_date"]
+        departure_time = request.form["departure_time"]
+        arrival_date = request.form["arrival_date"]
+        arrival_time = request.form["arrival_time"]
+        base_price = request.form["base_price"]
+        status = "normal" if request.form["status"] == "On Time" else "Delayed"
+        isroundtrip = "isroundtrip" in request.form
 
         connection = pymysql.connect(**mysql_config)
         try:
             with connection.cursor() as cursor:
                 query = "SELECT type FROM Airport WHERE airport_code = %s"
                 cursor.execute(query, (departure_airport,))
-                departure_airport_type = cursor.fetchone()['type']
+                departure_airport_type = cursor.fetchone()["type"]
 
                 cursor.execute(query, (arrival_airport,))
-                arrival_airport_type = cursor.fetchone()['type']
+                arrival_airport_type = cursor.fetchone()["type"]
 
                 if departure_airport_type != arrival_airport_type:
-                    session["error"] = "Error: Domestic and international airports cannot be mixed for a flight."
-                    return redirect('/')
+                    session[
+                        "error"
+                    ] = "Error: Domestic and international airports cannot be mixed for a flight."
+                    return redirect("/")
                 query = """
                     SELECT *
                     FROM Procedures
@@ -786,22 +852,50 @@ def create_flight():
                         (EndDate BETWEEN %s AND %s)
                     )
                 """
-                cursor.execute(query, (airline_name, identification, departure_date, arrival_date, departure_date, arrival_date))
+                cursor.execute(
+                    query,
+                    (
+                        airline_name,
+                        identification,
+                        departure_date,
+                        arrival_date,
+                        departure_date,
+                        arrival_date,
+                    ),
+                )
                 overlapping_flight = cursor.fetchone()
 
                 if overlapping_flight:
-                    session["error"] = "A maintenance period is scheduled during the flight. Cannot schedule maintenance."
+                    session[
+                        "error"
+                    ] = "A maintenance period is scheduled during the flight. Cannot schedule maintenance."
                     return redirect("/")
-                
+
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO Flight
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (airline_name, identification, flight_number, departure_date, departure_time, arrival_date, arrival_time, base_price, status, isroundtrip, departure_airport, arrival_airport))
+                cursor.execute(
+                    query,
+                    (
+                        airline_name,
+                        identification,
+                        flight_number,
+                        departure_date,
+                        departure_time,
+                        arrival_date,
+                        arrival_time,
+                        base_price,
+                        status,
+                        isroundtrip,
+                        departure_airport,
+                        arrival_airport,
+                    ),
+                )
                 connection.commit()
 
-            return redirect('/')
+            return redirect("/")
 
         except Exception as E:
             if "Unknown column" in str(E):
@@ -812,23 +906,24 @@ def create_flight():
         finally:
             connection.close()
 
-    return render_template('create_flight.html', airline_name=airline_name)
+    return render_template("create_flight.html", airline_name=airline_name)
 
-@app.route('/change_status', methods=['POST'])
+
+@app.route("/change_status", methods=["POST"])
 def change_status():
-    if 'username' not in session:
+    if "username" not in session:
         session["error"] = "Must be logged in as staff"
-        return redirect('/')
+        return redirect("/")
 
-    airline = request.form['airline']
-    flight_number = request.form['flight_number']
-    departure_date = request.form['departure_date']
-    departure_time = request.form['departure_time']
-    new_departure_date = request.form['new_departure_date']
-    new_departure_time = request.form['new_departure_time']
-    new_arrival_date = request.form['new_arrival_date']
-    new_arrival_time = request.form['new_arrival_time']
-    new_status = request.form['new_status']
+    airline = request.form["airline"]
+    flight_number = request.form["flight_number"]
+    departure_date = request.form["departure_date"]
+    departure_time = request.form["departure_time"]
+    new_departure_date = request.form["new_departure_date"]
+    new_departure_time = request.form["new_departure_time"]
+    new_arrival_date = request.form["new_arrival_date"]
+    new_arrival_time = request.form["new_arrival_time"]
+    new_status = request.form["new_status"]
 
     connection = pymysql.connect(**mysql_config)
     try:
@@ -839,14 +934,18 @@ def change_status():
                 FROM Ticket
                 WHERE Airline_Name = %s AND Number = %s AND Depart_Date = %s AND Depart_Time = %s
             """
-            cursor.execute(query, (airline, flight_number, departure_date, departure_time))
+            cursor.execute(
+                query, (airline, flight_number, departure_date, departure_time)
+            )
             tickets = cursor.fetchall()
 
             query = """
                 DELETE FROM Ticket
                 WHERE Airline_Name = %s AND Number = %s AND Depart_Date = %s AND Depart_Time = %s
             """
-            cursor.execute(query, (airline, flight_number, departure_date, departure_time))
+            cursor.execute(
+                query, (airline, flight_number, departure_date, departure_time)
+            )
             connection.commit()
 
             query = """
@@ -854,8 +953,20 @@ def change_status():
                 SET status = %s, departure_date = %s, departure_time = %s, arrival_date = %s, arrival_time = %s
                 WHERE Airline_Name = %s AND number = %s AND departure_date = %s AND departure_time = %s
             """
-            cursor.execute(query, (new_status, new_departure_date, new_departure_time, new_arrival_date, new_arrival_time,
-                                   airline, flight_number, departure_date, departure_time))
+            cursor.execute(
+                query,
+                (
+                    new_status,
+                    new_departure_date,
+                    new_departure_time,
+                    new_arrival_date,
+                    new_arrival_time,
+                    airline,
+                    flight_number,
+                    departure_date,
+                    departure_time,
+                ),
+            )
             connection.commit()
 
             for ticket in tickets:
@@ -863,14 +974,31 @@ def change_status():
                     INSERT INTO Ticket
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (ticket['Ticket_ID'], airline, ticket['Identification'], flight_number,
-                                       new_departure_date, new_departure_time, ticket['email'], ticket['FirstName'],
-                                       ticket['LastName'], ticket['DOB'], ticket['PurchaseDate'], ticket['PurchaseTime'],
-                                       ticket['CardType'], ticket['CardNumber'], ticket['CardExpiration'], ticket['CardName'],
-                                       ticket['price']))
+                cursor.execute(
+                    query,
+                    (
+                        ticket["Ticket_ID"],
+                        airline,
+                        ticket["Identification"],
+                        flight_number,
+                        new_departure_date,
+                        new_departure_time,
+                        ticket["email"],
+                        ticket["FirstName"],
+                        ticket["LastName"],
+                        ticket["DOB"],
+                        ticket["PurchaseDate"],
+                        ticket["PurchaseTime"],
+                        ticket["CardType"],
+                        ticket["CardNumber"],
+                        ticket["CardExpiration"],
+                        ticket["CardName"],
+                        ticket["price"],
+                    ),
+                )
             connection.commit()
 
-        return redirect('/')
+        return redirect("/")
 
     except Exception as E:
         if "Unknown column" in str(E):
@@ -882,44 +1010,57 @@ def change_status():
         connection.close()
 
 
-@app.route('/add_airplane', methods=['GET', 'POST'])
+@app.route("/add_airplane", methods=["GET", "POST"])
 def add_airplane():
-    if 'username' not in session:
+    if "username" not in session:
         session["error"] = "Must be logged in as staff"
-        return redirect('/')
+        return redirect("/")
 
-    username = session['username']
+    username = session["username"]
 
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
             query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (username,))
-            airline_name = cursor.fetchone()['airline_name']
+            airline_name = cursor.fetchone()["airline_name"]
 
             query = "SELECT * FROM Airplane WHERE Airline_Name = %s"
             cursor.execute(query, (airline_name,))
             airplanes = cursor.fetchall()
 
-        if request.method == 'POST':
-            identification = request.form['identification']
-            seats = request.form['seats']
-            model = request.form['model']
-            manufacturing_company = request.form['manufacturing_company']
-            manufacture_date = request.form['manufacture_date']
-            age = request.form['age']
+        if request.method == "POST":
+            identification = request.form["identification"]
+            seats = request.form["seats"]
+            model = request.form["model"]
+            manufacturing_company = request.form["manufacturing_company"]
+            manufacture_date = request.form["manufacture_date"]
+            age = request.form["age"]
 
             with connection.cursor() as cursor:
                 query = """
                     INSERT INTO Airplane
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (airline_name, identification, seats, model, manufacturing_company, manufacture_date, age))
+                cursor.execute(
+                    query,
+                    (
+                        airline_name,
+                        identification,
+                        seats,
+                        model,
+                        manufacturing_company,
+                        manufacture_date,
+                        age,
+                    ),
+                )
                 connection.commit()
 
-            return redirect('/add_airplane')
+            return redirect("/add_airplane")
 
-        return render_template('add_airplane.html', airline_name=airline_name, airplanes=airplanes)
+        return render_template(
+            "add_airplane.html", airline_name=airline_name, airplanes=airplanes
+        )
 
     except Exception as e:
         session["error"] = str(e)
@@ -929,19 +1070,19 @@ def add_airplane():
         connection.close()
 
 
-@app.route('/add_airport', methods=['GET', 'POST'])
+@app.route("/add_airport", methods=["GET", "POST"])
 def add_airport():
-    if 'username' not in session:
+    if "username" not in session:
         session["error"] = "Unauthorized access"
         return redirect("/")
 
-    if request.method == 'POST':
-        airport_code = request.form['airport_code']
-        airport_name = request.form['airport_name']
-        city = request.form['city']
-        country = request.form['country']
-        num_terminals = request.form['num_terminals']
-        airport_type = request.form['type']
+    if request.method == "POST":
+        airport_code = request.form["airport_code"]
+        airport_name = request.form["airport_name"]
+        city = request.form["city"]
+        country = request.form["country"]
+        num_terminals = request.form["num_terminals"]
+        airport_type = request.form["type"]
 
         connection = pymysql.connect(**mysql_config)
         try:
@@ -950,26 +1091,37 @@ def add_airport():
                     INSERT INTO Airport
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (airport_code, airport_name, city, country, num_terminals, airport_type))
+                cursor.execute(
+                    query,
+                    (
+                        airport_code,
+                        airport_name,
+                        city,
+                        country,
+                        num_terminals,
+                        airport_type,
+                    ),
+                )
                 connection.commit()
 
-            return redirect('/')
+            return redirect("/")
 
         except Exception as e:
             session["error"] = str(e)
-            return redirect('/')
+            return redirect("/")
 
         finally:
             connection.close()
 
-    return render_template('add_airport.html')
+    return render_template("add_airport.html")
 
-@app.route('/staff_view_ratings', methods=['POST'])
+
+@app.route("/staff_view_ratings", methods=["POST"])
 def staff_view_ratings():
-    airline_name = request.form['airline_name']
-    flight_number = request.form['flight_number']
-    departure_date = request.form['departure_date']
-    departure_time = request.form['departure_time']
+    airline_name = request.form["airline_name"]
+    flight_number = request.form["flight_number"]
+    departure_date = request.form["departure_date"]
+    departure_time = request.form["departure_time"]
 
     connection = pymysql.connect(**mysql_config)
     try:
@@ -979,34 +1131,43 @@ def staff_view_ratings():
                 FROM Ratings
                 WHERE airline_name = %s AND number = %s AND departure_date = %s AND departure_time = %s
             """
-            cursor.execute(query, (airline_name, flight_number, departure_date, departure_time))
+            cursor.execute(
+                query, (airline_name, flight_number, departure_date, departure_time)
+            )
             ratings = cursor.fetchall()
 
-        return render_template('staff_view_ratings.html', ratings=ratings, airline_name=airline_name, flight_number=flight_number, departure_date=departure_date, departure_time=departure_time)
+        return render_template(
+            "staff_view_ratings.html",
+            ratings=ratings,
+            airline_name=airline_name,
+            flight_number=flight_number,
+            departure_date=departure_date,
+            departure_time=departure_time,
+        )
 
     finally:
         connection.close()
 
-@app.route('/schedule_procedure', methods=['GET', 'POST'])
+
+@app.route("/schedule_procedure", methods=["GET", "POST"])
 def schedule_procedure():
-    if 'username' not in session:
+    if "username" not in session:
         session["error"] = "Unauthorized access"
         return redirect("/")
 
-    if request.method == 'POST':
-        airplane_id = request.form['airplane_id']
-        start_date = request.form['start_date']
-        start_time = request.form['start_time']
-        end_date = request.form['end_date']
-        end_time = request.form['end_time']
+    if request.method == "POST":
+        airplane_id = request.form["airplane_id"]
+        start_date = request.form["start_date"]
+        start_time = request.form["start_time"]
+        end_date = request.form["end_date"]
+        end_time = request.form["end_time"]
 
         connection = pymysql.connect(**mysql_config)
         try:
             with connection.cursor() as cursor:
-
                 query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
                 cursor.execute(query, (session["username"],))
-                airline_name = cursor.fetchone()['airline_name']
+                airline_name = cursor.fetchone()["airline_name"]
 
                 query = "SELECT * FROM Airplane WHERE Airline_Name = %s AND Identification = %s"
                 cursor.execute(query, (airline_name, airplane_id))
@@ -1015,7 +1176,7 @@ def schedule_procedure():
                 if not airplane:
                     session["error"] = "Airplane not found"
                     return redirect("/")
-                
+
                 query = """
                 SELECT *
                 FROM Flight
@@ -1025,18 +1186,40 @@ def schedule_procedure():
                     (arrival_date BETWEEN %s AND %s)
                 )
                 """
-                cursor.execute(query, (airline_name, airplane_id, start_date, end_date, start_date, end_date))
+                cursor.execute(
+                    query,
+                    (
+                        airline_name,
+                        airplane_id,
+                        start_date,
+                        end_date,
+                        start_date,
+                        end_date,
+                    ),
+                )
                 overlapping_flight = cursor.fetchone()
 
                 if overlapping_flight:
-                    session["error"] = "A flight is scheduled during the maintenance period. Cannot schedule maintenance."
+                    session[
+                        "error"
+                    ] = "A flight is scheduled during the maintenance period. Cannot schedule maintenance."
                     return redirect("/")
 
                 query = """
                     INSERT INTO Procedures
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                cursor.execute(query, (airline_name, airplane_id, start_date, start_time, end_date, end_time))
+                cursor.execute(
+                    query,
+                    (
+                        airline_name,
+                        airplane_id,
+                        start_date,
+                        start_time,
+                        end_date,
+                        end_time,
+                    ),
+                )
                 connection.commit()
 
             return redirect("/")
@@ -1044,12 +1227,13 @@ def schedule_procedure():
         finally:
             connection.close()
 
-    return render_template('schedule_procedure.html')
+    return render_template("schedule_procedure.html")
 
-@app.route('/frequent_customers', methods=['GET', 'POST'])
+
+@app.route("/frequent_customers", methods=["GET", "POST"])
 def frequent_customers():
-    if 'username' not in session:
-        return redirect('/staff_login')
+    if "username" not in session:
+        return redirect("/staff_login")
 
     current_date = datetime.date.today()
     one_year_ago = current_date - datetime.timedelta(days=365)
@@ -1059,7 +1243,7 @@ def frequent_customers():
         with connection.cursor() as cursor:
             query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (session["username"],))
-            airline_name = cursor.fetchone()['airline_name']
+            airline_name = cursor.fetchone()["airline_name"]
             query = """
                 SELECT c.email, c.first_name, c.last_name, COUNT(*) AS flight_count
                 FROM Ticket t
@@ -1074,8 +1258,8 @@ def frequent_customers():
             frequent_customer = cursor.fetchone()
 
             flights = None
-            if request.method == 'POST':
-                email = request.form['email']
+            if request.method == "POST":
+                email = request.form["email"]
                 query = """
                     SELECT f.number, f.departure_date, f.departure_time, f.arrival_date, f.arrival_time, f.departure_airport, f.arrival_airport
                     FROM Ticket t
@@ -1085,15 +1269,20 @@ def frequent_customers():
                 cursor.execute(query, (email, airline_name))
                 flights = cursor.fetchall()
 
-        return render_template('frequent_customers.html', frequent_customer=frequent_customer, flights=flights)
+        return render_template(
+            "frequent_customers.html",
+            frequent_customer=frequent_customer,
+            flights=flights,
+        )
 
     finally:
         connection.close()
 
-@app.route('/earned_revenue')
+
+@app.route("/earned_revenue")
 def earned_revenue():
-    if 'username' not in session:
-        return redirect('/staff_login')
+    if "username" not in session:
+        return redirect("/staff_login")
 
     current_date = datetime.date.today()
     one_month_ago = current_date - datetime.timedelta(days=30)
@@ -1102,10 +1291,9 @@ def earned_revenue():
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
-
             query = "SELECT airline_name FROM AirlineStaff WHERE username = %s"
             cursor.execute(query, (session["username"],))
-            airline_name = cursor.fetchone()['airline_name']
+            airline_name = cursor.fetchone()["airline_name"]
 
             query = """
                 SELECT SUM(t.price) AS total_revenue
@@ -1114,7 +1302,7 @@ def earned_revenue():
                 AND t.PurchaseDate BETWEEN %s AND %s
             """
             cursor.execute(query, (airline_name, one_month_ago, current_date))
-            last_month_revenue = cursor.fetchone()['total_revenue']
+            last_month_revenue = cursor.fetchone()["total_revenue"]
 
             query = """
                 SELECT SUM(t.price) AS total_revenue
@@ -1123,15 +1311,20 @@ def earned_revenue():
                 AND t.PurchaseDate BETWEEN %s AND %s
             """
             cursor.execute(query, (airline_name, one_year_ago, current_date))
-            last_year_revenue = cursor.fetchone()['total_revenue']
+            last_year_revenue = cursor.fetchone()["total_revenue"]
             last_month_revenue = 0 if last_month_revenue is None else last_month_revenue
             last_year_revenue = 0 if last_year_revenue is None else last_year_revenue
-        return render_template('earned_revenue.html', last_month_revenue=last_month_revenue, last_year_revenue=last_year_revenue)
+        return render_template(
+            "earned_revenue.html",
+            last_month_revenue=last_month_revenue,
+            last_year_revenue=last_year_revenue,
+        )
     except Exception as e:
         session["error"] = str(e)
         return redirect("/")
     finally:
         connection.close()
+
 
 if __name__ == "__main__":
     app.run()
