@@ -4,6 +4,7 @@
     <title>Frequent Customers and Customer Flights</title>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <h1>Most Frequent Customer (Last Year)</h1>
     {% if frequent_customer %}
         <p>Email: {{ frequent_customer.email }}</p>

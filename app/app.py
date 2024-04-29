@@ -432,7 +432,6 @@ def search_flights():
                 print(query)
                 print(params)
                 outbound_flights = cursor.fetchall()
-
                 if trip_type == 'round_trip':
                     query = """
                         SELECT 
@@ -482,14 +481,15 @@ def search_flights():
 
 @app.route('/purchase_ticket', methods=['POST'])
 def purchase_ticket():
+
+    if 'email' not in session:
+        session["error"] = "Please log in to purchase a ticket."
+        return redirect("/")
+
+    email = session['email']
     airline = request.form['airline']
     flight_number = request.form['flight_number']
     departure_date = request.form['departure_date']
-
-    if 'email' not in session:
-        return "Please log in to purchase a ticket."
-
-    email = session['email']
 
     connection = pymysql.connect(**mysql_config)
 
@@ -504,18 +504,18 @@ def purchase_ticket():
             flight = cursor.fetchone()
 
             if flight:
+                print(airline, flight_number, departure_date)
                 query = """
-                    UPDATE Ticket
-                    SET Email = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME()
-                    WHERE Ticket_ID = %s
+                    SELECT * from Ticket
+                    WHERE EMAIL='NONE' AND Airline_Name = %s AND Number = %s AND Depart_Date = %s
                 """
                 cursor.execute(query, (airline, flight_number, departure_date))
                 ticket = cursor.fetchone()
-
+                # print("exists", ticket)
                 if ticket:
                     query = """
                         UPDATE Ticket
-                        SET Email = %s
+                        SET Email = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME()
                         WHERE Ticket_ID = %s
                     """
                     cursor.execute(query, (email, ticket['Ticket_ID']))

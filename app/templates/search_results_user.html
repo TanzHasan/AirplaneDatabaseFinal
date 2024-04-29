@@ -4,8 +4,9 @@
     <title>Search Results</title>
 </head>
 <body>
+    {% include 'navbar.html' %}
     <h1>Search Results</h1>
-    {% if flights %}
+    {% if outbound_flights %}
         <table>
             <thead>
                 <tr>
@@ -19,7 +20,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for flight in flights %}
+                {% for flight in outbound_flights %}
                     <tr>
                         <td>{{ flight.Airline_Name }}</td>
                         <td>{{ flight.number }}</td>
@@ -40,8 +41,46 @@
             </tbody>
         </table>
     {% else %}
-        <p>No flights found matching the search criteria.</p>
+        <p>No outbound flights found matching the search criteria.</p>
     {% endif %}
+
+    {% if return_flights %}
+    <table>
+        <thead>
+            <tr>
+                <th>Airline</th>
+                <th>Flight Number</th>
+                <th>Departure</th>
+                <th>Arrival</th>
+                <th>Base Price</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flight in return_flights %}
+                <tr>
+                    <td>{{ flight.Airline_Name }}</td>
+                    <td>{{ flight.number }}</td>
+                    <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
+                    <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
+                    <td>{{ flight.base_price }}</td>
+                    <td>{{ flight.status }}</td>
+                    <td>
+                        <form action="/purchase_ticket" method="POST">
+                            <input type="hidden" name="airline" value="{{ flight.Airline_Name }}">
+                            <input type="hidden" name="flight_number" value="{{ flight.number }}">
+                            <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                            <input type="submit" value="Purchase">
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>No return flights found matching the search criteria.</p>
+{% endif %}
     <a href="/search_flights">Back to Search</a>
 </body>
 </html>
