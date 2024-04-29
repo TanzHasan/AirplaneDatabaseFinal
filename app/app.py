@@ -202,10 +202,9 @@ def home():
     else:
         error = ""
 
+    connection = pymysql.connect(**mysql_config)
     if "email" in session:
         email = session["email"]
-
-        connection = pymysql.connect(**mysql_config)
 
         try:
             with connection.cursor() as cursor:
@@ -233,7 +232,7 @@ def home():
                 ratings = cursor.fetchall()
 
                 return render_template(
-                    "home.html",
+                    "home_user.html",
                     future_flights=future_flights,
                     past_flights=past_flights,
                     first_name=customer["first_name"],
@@ -247,14 +246,29 @@ def home():
             connection.close()
 
     elif "username" in session:
-        return render_template(
-            "home.html",
-            first_name="testing",
-            last_name="testing",
-            error=error
-        )
+        try:
+            with connection.cursor() as cursor:
+                query = "SELECT * FROM AirlineStaff WHERE username = %s"
+                cursor.execute(query, (session["username"]))
+                staffinfo = cursor.fetchone()
+            return render_template(
+                "home_staff.html",
+                first_name=staffinfo["first_name"],
+                last_name=staffinfo["last_name"],
+                error=error
+            )
+        except Exception as E:
+            session["error"] = str(E)
+            return render_template(
+                "home_staff.html",
+                first_name="Something",
+                last_name="Went Wrong",
+                error=error
+            )
+        finally:
+            connection.close()
     else:
-        return render_template("home.html", login=True, error=error)
+        return render_template("home_user.html", login=True, error=error)
 
 
 @app.route("/rate_flight", methods=["POST"])

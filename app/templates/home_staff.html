@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <h1>{{ first_name }} {{ last_name }} Dashboard</h1>
+
+    <a href="/staff_view_flights">View Flights</a>
+    <br>
+    <a href='/earned_revenue'>Earned Revenue</a>
+    <br>
+    <a href='/schedule_procedure'>Schedule Procedure</a>
+    <br>
+    <a href='/create_flight'>Create Flight</a>
+    <br>
+    <a href='/add_airplane'>Add Airplane</a>
+    <br>
+    <a href='/add_airport'>Add Airport</a>
+    <br>
+    <a href='/frequent_customers'>Frequent Customer</a>
+</body>
+</html>
