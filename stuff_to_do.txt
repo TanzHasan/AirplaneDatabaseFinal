@@ -1,5 +1,3 @@
-TURN ROUND TRIP TO TWO FLIGHTS
-
 0. Hash the passwords
 Done
 
