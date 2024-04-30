@@ -562,7 +562,7 @@ def purchase_ticket():
 
                     return redirect("/")
                 else:
-                    session["error"] = "Flight not found"
+                    session["error"] = "No Tickets available"
                     return redirect("/")
             else:
                 session["error"] = "Flight not found"
