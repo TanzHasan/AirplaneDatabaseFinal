@@ -7,6 +7,7 @@
     {% include 'navbar.html' %}
     <h1>Search Results</h1>
     {% if outbound_flights %}
+        <h2>Outbound Flights</h2>
         <table>
             <thead>
                 <tr>
@@ -21,44 +22,6 @@
             </thead>
             <tbody>
                 {% for flight in outbound_flights %}
-                    <tr>
-                        <td>{{ flight.Airline_Name }}</td>
-                        <td>{{ flight.number }}</td>
-                        <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
-                        <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
-                        <td>{{ flight.base_price }}</td>
-                        <td>{{ flight.status }}</td>
-                        <td>
-                            <form action="/purchase_ticket" method="POST">
-                                <input type="hidden" name="airline" value="{{ flight.Airline_Name }}">
-                                <input type="hidden" name="flight_number" value="{{ flight.number }}">
-                                <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
-                                <input type="submit" value="Purchase">
-                            </form>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No outbound flights found matching the search criteria.</p>
-    {% endif %}
-
-    {% if return_flights %}
-    <table>
-        <thead>
-            <tr>
-                <th>Airline</th>
-                <th>Flight Number</th>
-                <th>Departure</th>
-                <th>Arrival</th>
-                <th>Base Price</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for flight in return_flights %}
                 <tr>
                     <td>{{ flight.Airline_Name }}</td>
                     <td>{{ flight.number }}</td>
@@ -71,16 +34,78 @@
                             <input type="hidden" name="airline" value="{{ flight.Airline_Name }}">
                             <input type="hidden" name="flight_number" value="{{ flight.number }}">
                             <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                            <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
+                            <label for="DOB">Date of Birth:</label>
+                            <input type="date" name="DOB" required><br>
+                            <label for="CardType">Card Type:</label>
+                            <input type="text" name="CardType" required><br>
+                            <label for="CardNumber">Card Number:</label>
+                            <input type="text" name="CardNumber" required><br>
+                            <label for="CardExpiration">Card Expiration:</label>
+                            <input type="date" name="CardExpiration" required><br>
+                            <label for="CardName">Card Name:</label>
+                            <input type="text" name="CardName" required><br>
                             <input type="submit" value="Purchase">
                         </form>
                     </td>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>No return flights found matching the search criteria.</p>
-{% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No outbound flights found matching the search criteria.</p>
+    {% endif %}
+
+    {% if return_flights %}
+        <h2>Return Flights</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Airline</th>
+                    <th>Flight Number</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Base Price</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in return_flights %}
+                <tr>
+                    <td>{{ flight.Airline_Name }}</td>
+                    <td>{{ flight.number }}</td>
+                    <td>{{ flight.departure_date }} {{ flight.departure_time }}</td>
+                    <td>{{ flight.arrival_date }} {{ flight.arrival_time }}</td>
+                    <td>{{ flight.base_price }}</td>
+                    <td>{{ flight.status }}</td>
+                    <td>
+                        <form action="/purchase_ticket" method="POST">
+                            <input type="hidden" name="airline" value="{{ flight.Airline_Name }}">
+                            <input type="hidden" name="flight_number" value="{{ flight.number }}">
+                            <input type="hidden" name="departure_date" value="{{ flight.departure_date }}">
+                            <input type="hidden" name="departure_time" value="{{ flight.departure_time }}">
+                            <label for="DOB">Date of Birth:</label>
+                            <input type="date" name="DOB" required><br>
+                            <label for="CardType">Card Type:</label>
+                            <input type="text" name="CardType" required><br>
+                            <label for="CardNumber">Card Number:</label>
+                            <input type="text" name="CardNumber" required><br>
+                            <label for="CardExpiration">Card Expiration:</label>
+                            <input type="date" name="CardExpiration" required><br>
+                            <label for="CardName">Card Name:</label>
+                            <input type="text" name="CardName" required><br>
+                            <input type="submit" value="Purchase">
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif rt %}
+        <p>No return flights found matching the search criteria.</p>
+    {% endif %}
+
     <a href="/search_flights">Back to Search</a>
 </body>
 </html>
