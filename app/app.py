@@ -737,8 +737,16 @@ def spending():
                 FROM Ticket
                 WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
             """
+            # print(start_date, end_date)
             cursor.execute(query, (email, start_date, end_date))
             total_spent = cursor.fetchone()["total_spent"]
+
+            # query = """
+            #     SELECT * FROM Ticket
+            #     WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
+            # """
+            # cursor.execute(query, (email, start_date, end_date))
+            # print(cursor.fetchall())
 
             query = """
                 SELECT YEAR(PurchaseDate) AS year, MONTH(PurchaseDate) AS month, SUM(price) AS total_spent
