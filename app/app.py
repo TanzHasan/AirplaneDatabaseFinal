@@ -552,7 +552,7 @@ def purchase_ticket():
                 print("Number of tickets:", seen)
                 
                 if seats['numseats'] > seen['amount']:
-                    surge = 1 if seats['numseats']*.8 > seen['amount']+1 else 1.25
+                    surge = 1 if seats['numseats']*.8 >= seen['amount'] else 1.25
                     while True:
                         ticket_id = random.randint(1, 1000000)  # Adjust the range as needed
                         query_check_ticket_id = """
