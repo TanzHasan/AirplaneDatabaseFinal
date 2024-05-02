@@ -46,8 +46,22 @@
         <label for="dob">Date of Birth:</label>
         <input type="date" id="dob" name="dob" required>
 
+        <label for="phone_number">Phone Number:</label>
+        <input type="tel" name="phone_number" required>
+        <button type="button" id="addPhoneBtn">Add Another Phone</button>
+        <div id="phoneContainer"></div>
+
         <input type="submit" value="Register">
     </form>
     <p><a href="/login_user">Login as Customer</a></p>
+    <script>
+        document.getElementById("addPhoneBtn").addEventListener("click", function() {
+            var container = document.getElementById("phoneContainer");
+            var input = document.createElement("input");
+            input.type = "tel";
+            input.name = "phone_number";
+            container.appendChild(input);
+        });
+    </script>
 </body>
 </html>

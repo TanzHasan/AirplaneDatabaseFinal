@@ -43,25 +43,6 @@ CREATE TABLE Flight (
     FOREIGN KEY (arrival_airport) REFERENCES Airport(airport_code)
 );
 
-CREATE TABLE ReturnFlight (
-    ReturnAirline_Name VARCHAR(20) NOT NULL,
-    ReturnIdentification DOUBLE(10, 0) UNSIGNED NOT NULL,
-    Returnnumber DOUBLE(10, 0) UNSIGNED NOT NULL,
-    Returndeparture_date DATE NOT NULL,
-    Returndeparture_time TIME(3) NOT NULL,
-    Returndeparture_airport VARCHAR(20),
-    Returnarrival_airport VARCHAR(20),
-    Airline_Name VARCHAR(20) NOT NULL,
-    Identification DOUBLE(10, 0) UNSIGNED NOT NULL,
-    number DOUBLE(10, 0) UNSIGNED NOT NULL,
-    departure_date DATE NOT NULL,
-    departure_time TIME(3) NOT NULL,
-    departure_airport VARCHAR(20),
-    arrival_airport VARCHAR(20),
-    PRIMARY KEY (Airline_Name, Identification, number, departure_date, departure_time),
-    FOREIGN KEY (Airline_Name, Identification, number, departure_date, departure_time)
-        REFERENCES Flight(Airline_Name, Identification, number, departure_date, departure_time)
-);
 create table AirlineStaff(
 	username 			VARCHAR(20) NOT NULL,
 	airline_name			VARCHAR(20) NOT NULL, 
@@ -76,7 +57,7 @@ create table AirlineStaff(
 create table PhoneNumber(
 	username			VARCHAR(20) NOT NULL,
 	Airline_Name			VARCHAR(20) NOT NULL,
-	phone_number		CHAR(12),
+	phone_number		CHAR(20),
 PRIMARY KEY (username, airline_name, phone_number),
 FOREIGN KEY (username, Airline_Name) references AirlineStaff(username, Airline_Name)
 );
@@ -124,7 +105,7 @@ CREATE TABLE Ratings (
 
 CREATE TABLE Customer_Phone (
     email VARCHAR(20) NOT NULL,
-    phone_number CHAR(12) NOT NULL,
+    phone_number CHAR(20) NOT NULL,
     PRIMARY KEY (email, phone_number),
     FOREIGN KEY (email) REFERENCES Customers(email)
 );

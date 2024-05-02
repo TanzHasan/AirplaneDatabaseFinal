@@ -31,6 +31,7 @@ def register_staff():
         last_name = request.form["last_name"]
         dob = request.form["dob"]
         email_addresses = request.form.getlist("email_address")
+        phone_numbers = request.form.getlist("phone_numbers")
 
         connection = pymysql.connect(**mysql_config)
         try:
@@ -49,6 +50,13 @@ def register_staff():
                         VALUES (%s, %s, %s)
                     """
                     cursor.execute(query, (username, airline_name, email_address))
+                
+                for phone_number in phone_numbers:
+                    query = """
+                        INSERT INTO PhoneNumber
+                        VALUES (%s, %s, %s)
+                    """
+                    cursor.execute(query, (username, airline_name, phone_number))
 
                 connection.commit()
 
@@ -87,6 +95,7 @@ def register_user():
         passport_expiration = request.form["passport_expiration"]
         passport_country = request.form["passport_country"]
         dob = request.form["dob"]
+        phone_numbers = request.form.getlist("phone_numbers")
 
         if "@" not in email:
             return render_template("login_user.html", error="Bad email")
@@ -117,6 +126,14 @@ def register_user():
                         dob,
                     ),
                 )
+
+                for phone_number in phone_numbers:
+                    query = """
+                        INSERT INTO Customer_Phone
+                        VALUES (%s, %s)
+                    """
+                    cursor.execute(query, (email, phone_number))
+
                 connection.commit()  # I need to do this to save
 
                 # just logging in again
@@ -395,16 +412,20 @@ def search_flights():
             with connection.cursor() as cursor:
                 query = """
                     SELECT 
-                        f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time,
-                        f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip,
-                        f.departure_airport, f.arrival_airport
-                    FROM 
-                        Flight f, Airport a, Airport b
-                    WHERE 
-                        f.departure_airport = a.airport_code AND
-                        f.arrival_airport = b.airport_code AND
-                        f.departure_date = %s AND
-                        f.departure_date >= %s
+                    f.Airline_Name, f.Identification, f.number, f.departure_date, f.departure_time, 
+                    f.arrival_date, f.arrival_time, f.base_price, f.status, f.isroundtrip, 
+                    f.departure_airport, f.arrival_airport
+                FROM 
+                    FROM Flight f, Airport a, Airport b WHERE f.departure_airport = a.airport_code AND f.arrival_airport = b.airport_code AND
+                    f.departure_date = %s 
+                    AND f.departure_date >= %s
+                    AND (
+                        a.country = b.country 
+                        OR (
+                            (a.type = 'international' OR a.type = 'both') 
+                            AND (b.type = 'international' OR b.type = 'both')
+                        )
+                    )
                 """
                 params = [departure_date, str(datetime.date.today())]
 
@@ -439,6 +460,13 @@ def search_flights():
                             f.arrival_airport = b.airport_code AND
                             f.departure_date = %s AND
                             f.departure_date >= %s
+                            AND (
+                                a.country = b.country 
+                                OR (
+                                    (a.type = 'international' OR a.type = 'both') 
+                                    AND (b.type = 'international' OR b.type = 'both')
+                                )
+                            )
                     """
                     params = [return_date, departure_date]
 
