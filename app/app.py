@@ -362,49 +362,10 @@ def cancel_ticket():
     connection = pymysql.connect(**mysql_config)
     try:
         with connection.cursor() as cursor:
-            flight_query = """
-                SELECT 
-                    Ticket_ID, Airline_Name, Identification, Number, Depart_Date, Depart_Time,
-                    FirstName, LastName, DOB, CardType, CardNumber, CardExpiration, CardName, price
-                FROM 
-                    Ticket
-                WHERE 
-                    Ticket_ID = %s
-            """
-            cursor.execute(flight_query, (ticket_id,))
-            flight_details = cursor.fetchone()
 
             delete_query = "DELETE FROM Ticket WHERE Ticket_ID = %s"
             cursor.execute(delete_query, (ticket_id,))
             connection.commit()
-
-            if flight_details:
-                insert_query = """
-                    INSERT INTO Ticket
-                    VALUES (
-                        %s, %s, %s, %s, %s, %s,
-                        "None", %s, %s, %s, CURDATE(), CURTIME(),
-                        %s, %s, %s, %s, %s
-                    )
-                """
-                insert_values = (
-                    flight_details["Ticket_ID"],
-                    flight_details["Airline_Name"],
-                    flight_details["Identification"],
-                    flight_details["Number"],
-                    flight_details["Depart_Date"],
-                    flight_details["Depart_Time"],
-                    flight_details["FirstName"],
-                    flight_details["LastName"],
-                    flight_details["DOB"],
-                    flight_details["CardType"],
-                    flight_details["CardNumber"],
-                    flight_details["CardExpiration"],
-                    flight_details["CardName"],
-                    flight_details["price"],
-                )
-                cursor.execute(insert_query, insert_values)
-
             connection.commit()
 
     except Exception as E:
@@ -545,8 +506,6 @@ def purchase_ticket():
     CardExpiration = request.form["CardExpiration"]
     CardName = request.form["CardName"]
     
-    price = 7
-
     connection = pymysql.connect(**mysql_config)
 
     try:
@@ -567,93 +526,74 @@ def purchase_ticket():
             flight = cursor.fetchone()
 
             if flight:
-                # all tickets made
-                query = """
-                    SELECT * from Ticket
-                    WHERE EMAIL='NONE' AND Airline_Name = %s AND Number = %s AND Depart_Date = %s
+            
+                a = """
+                SELECT Identification from Flight
+                WHERE Airline_Name = %s AND number = %s
                 """
-                cursor.execute(query, (airline, flight_number, departure_date))
-                ticket = cursor.fetchone()
-                # print("exists", ticket)
-                if ticket:
-                    query = """
-                        UPDATE Ticket
-                        SET Email = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME(), FirstName = %s, LastName = %s, DOB = %s, PurchaseDate = CURDATE(), PurchaseTime = CURTIME(),
-                        CardType = %s, CardNumber = %s, CardExpiration = %s, CardName = %s
-                        WHERE Ticket_ID = %s
-                    """
-                    cursor.execute(query, (email, ticket["Ticket_ID"]))
-                    connection.commit()
+                cursor.execute(a, (airline, flight_number))
+                identification = cursor.fetchone()['Identification']
+                b = '''
+                SELECT numseats from Airplane
+                WHERE Airline_Name = %s AND Identification = %s
+                '''
+                cursor.execute(b, (airline, identification))
+                print(airline, identification)
+                seats = cursor.fetchone()
 
+                c = '''
+                    SELECT COUNT(*) as amount
+                    FROM Ticket
+                    WHERE Airline_Name = %s AND Number = %s AND Depart_Date = %s
+                '''
+                cursor.execute(c, (airline, flight_number, departure_date))
+                seen = cursor.fetchone()
+                print("Number of seats:", seats)
+                print("Number of tickets:", seen)
+                
+                if seats['numseats'] > seen['amount']:
+                    surge = 1 if seats['numseats']*.8 > seen['amount']+1 else 1.25
+                    while True:
+                        ticket_id = random.randint(1, 1000000)  # Adjust the range as needed
+                        query_check_ticket_id = """
+                            SELECT COUNT(*) as count
+                            FROM Ticket
+                            WHERE Ticket_ID = %s
+                        """
+                        cursor.execute(query_check_ticket_id, (ticket_id,))
+                        result = cursor.fetchone()
+                        if result['count'] == 0:
+                            break
+                    item = """
+                        INSERT INTO Ticket
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE(), CURTIME(), %s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(
+                            item,
+                            (
+                                ticket_id,
+                                airline,
+                                identification,
+                                float(flight_number),
+                                departure_date,
+                                departure_time,
+                                session["email"],
+                                first_name,
+                                last_name,
+                                DOB,
+                                CardType,
+                                CardNumber,
+                                str(CardExpiration),
+                                CardName,
+                                flight["base_price"]*surge,
+                            ),
+                        )
+                    connection.commit()
                     return redirect("/")
                 else:
-
-                    a = """
-                    SELECT Identification from Flight
-                    WHERE Airline_Name = %s AND number = %s
-                    """
-                    cursor.execute(a, (airline, flight_number))
-                    identification = cursor.fetchone()['Identification']
-                    b = '''
-                    SELECT numseats from Airplane
-                    WHERE Airline_Name = %s AND Identification = %s
-                    '''
-                    cursor.execute(b, (airline, identification))
-                    print(airline, identification)
-                    seats = cursor.fetchone()
-
-                    c = '''
-                        SELECT COUNT(*) as amount
-                        FROM Ticket
-                        WHERE Airline_Name = %s AND Number = %s AND Depart_Date = %s
-                    '''
-                    cursor.execute(c, (airline, flight_number, departure_date))
-                    seen = cursor.fetchone()
-                    print("Number of seats:", seats)
-                    print("Number of tickets:", seen)
-                    
-                    if seats['numseats'] > seen['amount']:
-                        while True:
-                            ticket_id = random.randint(1, 1000000)  # Adjust the range as needed
-                            query_check_ticket_id = """
-                                SELECT COUNT(*) as count
-                                FROM Ticket
-                                WHERE Ticket_ID = %s
-                            """
-                            cursor.execute(query_check_ticket_id, (ticket_id,))
-                            result = cursor.fetchone()
-                            if result['count'] == 0:
-                                break
-                        item = """
-                            INSERT INTO Ticket
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE(), CURTIME(), %s, %s, %s, %s, %s)
-                        """
-                        cursor.execute(
-                                item,
-                                (
-                                    ticket_id,
-                                    airline,
-                                    identification,
-                                    float(flight_number),
-                                    departure_date,
-                                    departure_time,
-                                    session["email"],
-                                    first_name,
-                                    last_name,
-                                    DOB,
-                                    CardType,
-                                    CardNumber,
-                                    str(CardExpiration),
-                                    CardName,
-                                    flight["base_price"],
-                                ),
-                            )
-                        connection.commit()
-                        return redirect("/")
-                    else:
-                        print(f"""{seats['numseats']} > {seen['amount']}""")
-                        session["error"] = "No Tickets available"
-                        return redirect("/")
+                    print(f"""{seats['numseats']} > {seen['amount']}""")
+                    session["error"] = "No Tickets available"
+                    return redirect("/")
             else:
                 session["error"] = "Flight not found"
                 return redirect("/")
