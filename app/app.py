@@ -4,6 +4,7 @@ import os
 import datetime
 from queries import *
 from dotenv import load_dotenv
+import random
 
 load_dotenv()
 
@@ -612,31 +613,25 @@ def purchase_ticket():
                     print("Number of tickets:", seen)
                     
                     if seats['numseats'] > seen['amount']:
+                        while True:
+                            ticket_id = random.randint(1, 1000000)  # Adjust the range as needed
+                            query_check_ticket_id = """
+                                SELECT COUNT(*) as count
+                                FROM Ticket
+                                WHERE Ticket_ID = %s
+                            """
+                            cursor.execute(query_check_ticket_id, (ticket_id,))
+                            result = cursor.fetchone()
+                            if result['count'] == 0:
+                                break
                         item = """
                             INSERT INTO Ticket
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE(), CURTIME(), %s, %s, %s, %s, %s)
                         """
-                        print((
-                                    seen["amount"]*22+7,
-                                    airline,
-                                    identification,
-                                    flight_number,
-                                    departure_date,
-                                    departure_time,
-                                    session["email"],
-                                    first_name,
-                                    last_name,
-                                    DOB,
-                                    CardType,
-                                    CardNumber,
-                                    str(CardExpiration),
-                                    CardName,
-                                    price,
-                                ))
                         cursor.execute(
                                 item,
                                 (
-                                    seen["amount"]*22+7,
+                                    ticket_id,
                                     airline,
                                     identification,
                                     float(flight_number),
@@ -650,7 +645,7 @@ def purchase_ticket():
                                     CardNumber,
                                     str(CardExpiration),
                                     CardName,
-                                    price,
+                                    flight["base_price"],
                                 ),
                             )
                         connection.commit()
@@ -737,16 +732,9 @@ def spending():
                 FROM Ticket
                 WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
             """
-            # print(start_date, end_date)
+
             cursor.execute(query, (email, start_date, end_date))
             total_spent = cursor.fetchone()["total_spent"]
-
-            # query = """
-            #     SELECT * FROM Ticket
-            #     WHERE email = %s AND PurchaseDate BETWEEN %s AND %s
-            # """
-            # cursor.execute(query, (email, start_date, end_date))
-            # print(cursor.fetchall())
 
             query = """
                 SELECT YEAR(PurchaseDate) AS year, MONTH(PurchaseDate) AS month, SUM(price) AS total_spent
